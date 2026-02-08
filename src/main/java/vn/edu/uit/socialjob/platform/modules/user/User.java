@@ -1,4 +1,4 @@
-package  vn.edu.uit.socialjob.platform.model;
+package  vn.edu.uit.socialjob.platform.modules.user;
 
 import jakarta.persistence.*;
 import lombok.Data;
