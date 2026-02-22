@@ -14,6 +14,9 @@ public class UserService {
         if(userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new RuntimeException("Email này đã được sử dụng!");
         }
+        if(userRepository.findByUsername(user.getUsername()).isPresent()) {
+            throw new RuntimeException("Username này đã được sử dụng!");
+        }
         return userRepository.save(user);
     }
 
