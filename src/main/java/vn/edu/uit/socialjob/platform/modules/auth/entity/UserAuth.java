@@ -1,11 +1,11 @@
-package vn.edu.uit.socialjob.platform.modules.auth;
+package vn.edu.uit.socialjob.platform.modules.auth.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Data;
 import lombok.ToString;
-import vn.edu.uit.socialjob.platform.modules.user.User;
+import vn.edu.uit.socialjob.platform.modules.user.entity.User;
 
 @Entity
 @Table(name = "user_auths")

@@ -1,10 +1,14 @@
-package vn.edu.uit.socialjob.platform.modules.auth;
+package vn.edu.uit.socialjob.platform.modules.auth.controller;
 
 import com.google.firebase.auth.FirebaseAuthException;
+
+import vn.edu.uit.socialjob.platform.modules.auth.dto.FirebaseAuthRequest;
+import vn.edu.uit.socialjob.platform.modules.auth.service.AuthService;
+import vn.edu.uit.socialjob.platform.modules.user.entity.User;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import vn.edu.uit.socialjob.platform.modules.user.User;
 
 @RestController
 @RequestMapping("/api/auth")

@@ -1,4 +1,4 @@
-package  vn.edu.uit.socialjob.platform.modules.user;
+package  vn.edu.uit.socialjob.platform.modules.user.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

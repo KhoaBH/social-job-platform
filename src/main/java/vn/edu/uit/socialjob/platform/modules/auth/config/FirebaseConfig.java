@@ -1,4 +1,4 @@
-package vn.edu.uit.socialjob.platform.modules.auth;
+package vn.edu.uit.socialjob.platform.modules.auth.config;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;

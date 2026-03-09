@@ -1,9 +1,12 @@
-package vn.edu.uit.socialjob.platform.modules.user;
+package vn.edu.uit.socialjob.platform.modules.user.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import vn.edu.uit.socialjob.platform.modules.user.entity.User;
+import vn.edu.uit.socialjob.platform.modules.user.service.UserService;
 
 import java.util.List;
 

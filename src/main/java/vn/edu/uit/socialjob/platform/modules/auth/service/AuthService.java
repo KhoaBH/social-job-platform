@@ -1,4 +1,4 @@
-package vn.edu.uit.socialjob.platform.modules.auth;
+package vn.edu.uit.socialjob.platform.modules.auth.service;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
@@ -7,8 +7,11 @@ import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
-import vn.edu.uit.socialjob.platform.modules.user.User;
-import vn.edu.uit.socialjob.platform.modules.user.UserRepository;
+
+import vn.edu.uit.socialjob.platform.modules.auth.entity.UserAuth;
+import vn.edu.uit.socialjob.platform.modules.auth.repository.UserAuthRepository;
+import vn.edu.uit.socialjob.platform.modules.user.entity.User;
+import vn.edu.uit.socialjob.platform.modules.user.repository.UserRepository;
 
 @Service
 public class AuthService {
