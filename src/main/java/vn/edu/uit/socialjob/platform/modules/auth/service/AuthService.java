@@ -3,35 +3,40 @@ package vn.edu.uit.socialjob.platform.modules.auth.service;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
+
 import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 
+import vn.edu.uit.socialjob.platform.modules.auth.dto.AuthResponse;
 import vn.edu.uit.socialjob.platform.modules.auth.entity.UserAuth;
 import vn.edu.uit.socialjob.platform.modules.auth.repository.UserAuthRepository;
 import vn.edu.uit.socialjob.platform.modules.user.entity.User;
 import vn.edu.uit.socialjob.platform.modules.user.repository.UserRepository;
-
+import vn.edu.uit.socialjob.platform.modules.auth.provider.JwtProvider;
 @Service
 public class AuthService {
     private static final String PROVIDER_FIREBASE = "firebase";
 
     private final FirebaseAuth firebaseAuth;
+    private final JwtProvider jwtProvider;
     private final UserRepository userRepository;
     private final UserAuthRepository userAuthRepository;
 
     public AuthService(
         FirebaseAuth firebaseAuth,
+        JwtProvider jwtProvider,
         UserRepository userRepository,
         UserAuthRepository userAuthRepository
     ) {
         this.firebaseAuth = firebaseAuth;
+        this.jwtProvider = jwtProvider;
         this.userRepository = userRepository;
         this.userAuthRepository = userAuthRepository;
     }
 
-    public User authenticateWithFirebase(String idToken) throws FirebaseAuthException {
+    public AuthResponse authenticateWithFirebase(String idToken) throws FirebaseAuthException {
         FirebaseToken token = firebaseAuth.verifyIdToken(idToken);
 
         String firebaseUid = token.getUid();
@@ -41,8 +46,16 @@ public class AuthService {
 
         User user = findOrCreateUser(email, fullName, avatarUrl, firebaseUid);
         ensureUserAuth(user, firebaseUid);
-
-        return user;
+        String jwtToken = jwtProvider.generateToken(user);
+        return AuthResponse.builder()
+            .token(jwtToken)
+            .user(AuthResponse.UserDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .avatarUrl(user.getAvatarUrl())
+                .build())
+            .build();
     }
 
     private User findOrCreateUser(String email, String fullName, String avatarUrl, String firebaseUid) {
