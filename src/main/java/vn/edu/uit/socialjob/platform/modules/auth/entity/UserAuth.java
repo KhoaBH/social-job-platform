@@ -3,14 +3,17 @@ package vn.edu.uit.socialjob.platform.modules.auth.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
+import vn.edu.uit.socialjob.platform.common.entity.BaseEntity;
 import vn.edu.uit.socialjob.platform.modules.user.entity.User;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "user_auths")
-@Data
-public class UserAuth {
+public class UserAuth extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(columnDefinition = "uuid")

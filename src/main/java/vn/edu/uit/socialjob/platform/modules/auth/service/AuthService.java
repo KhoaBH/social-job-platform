@@ -58,6 +58,38 @@ public class AuthService {
             .build();
     }
 
+    /**
+     * DEV ONLY: Generate JWT token without Firebase authentication
+     * Used for testing backend APIs without frontend/Firebase login
+     */
+    public AuthResponse authenticateForDev(String email) {
+        Optional<User> existing = userRepository.findByEmail(email);
+        User user;
+        
+        if (existing.isPresent()) {
+            user = existing.get();
+        } else {
+            // Create new test user
+            user = new User();
+            user.setEmail(email);
+            user.setUsername(generateUsername(email, null));
+            user.setFullName("Test User - " + email);
+            user.setAvatarUrl("https://ui-avatars.com/api/?name=" + email);
+            user = userRepository.save(user);
+        }
+        
+        String jwtToken = jwtProvider.generateToken(user);
+        return AuthResponse.builder()
+            .token(jwtToken)
+            .user(AuthResponse.UserDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .avatarUrl(user.getAvatarUrl())
+                .build())
+            .build();
+    }
+
     private User findOrCreateUser(String email, String fullName, String avatarUrl, String firebaseUid) {
         Optional<User> existing = (email == null || email.isBlank())
             ? Optional.empty()

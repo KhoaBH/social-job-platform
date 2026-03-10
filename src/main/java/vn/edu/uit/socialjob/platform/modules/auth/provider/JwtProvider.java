@@ -1,6 +1,7 @@
 package vn.edu.uit.socialjob.platform.modules.auth.provider;
 
 import java.util.Date;
+import javax.crypto.SecretKey;
 
 import org.springframework.stereotype.Component;
 
@@ -23,20 +24,33 @@ public class JwtProvider {
                 .claim("email", user.getEmail())     // Thêm thông tin bổ sung (Payload)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
-                .signWith(Keys.hmacShaKeyFor(SECRET_KEY.getBytes()), SignatureAlgorithm.HS256)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public String getSubject(String token) {
+        return Jwts.parserBuilder()
+            .setSigningKey(getSigningKey())
+            .build()
+            .parseClaimsJws(token)
+            .getBody()
+            .getSubject();
     }
 
     // Sau này ông sẽ cần hàm này để verify token khi User gọi API khác
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
-                .setSigningKey(Keys.hmacShaKeyFor(SECRET_KEY.getBytes()))
+                .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token);
             return true;
         } catch (Exception ex) {
             return false;
         }
+    }
+
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 }

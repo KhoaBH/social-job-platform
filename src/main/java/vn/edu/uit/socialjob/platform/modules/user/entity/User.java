@@ -1,10 +1,14 @@
 package  vn.edu.uit.socialjob.platform.modules.user.entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 import java.util.UUID;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import vn.edu.uit.socialjob.platform.common.entity.BaseEntity;
 
+@Getter
+@Setter
 @Entity
 @Table(
     name = "users",
@@ -13,8 +17,8 @@ import lombok.Data;
         @UniqueConstraint(name = "uk_users_username", columnNames = "username")
     }
 )
-@Data
-public class User {
+@EqualsAndHashCode(callSuper = false)
+public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(columnDefinition = "uuid")
@@ -38,19 +42,10 @@ public class User {
     @Column(columnDefinition = "text")
     private String headline;
 
-    @Column(name = "sumary", columnDefinition = "text")
+    @Column(name = "summary", columnDefinition = "text")
     private String summary;
 
     @Column(columnDefinition = "text")
     private String location;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    public void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-    }
 }
