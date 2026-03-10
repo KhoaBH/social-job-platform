@@ -1,5 +1,7 @@
-
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+# ==========================================
+# STAGE 1: Build ứng dụng với Maven và Java 21
+# ==========================================
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
 COPY pom.xml .
@@ -7,11 +9,12 @@ COPY src ./src
 
 RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:17-jre-alpine
+
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-Xmx300m", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xmx300m", "-XX:+UseSerialGC", "-jar", "app.jar"]
