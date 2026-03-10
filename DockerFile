@@ -1,6 +1,4 @@
-# ==========================================
-# STAGE 1: Build ứng dụng với Maven và Java 21
-# ==========================================
+
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
