@@ -18,8 +18,9 @@ public class ConnectionService {
     private ConnectionRepository connectionRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private FollowService followService;
     public  Connection sendRequest(UUID requesterId,FriendRequest data) {
-        // Implementation for sending friend request
         Connection connection = new Connection();
         UUID addresseeId = data.getAddresseeId();
         if(requesterId.equals(addresseeId)) {
@@ -31,10 +32,21 @@ public class ConnectionService {
         }
         connection.setRequester(userRepository.getReferenceById(requesterId));
         connection.setAddressee(userRepository.getReferenceById(addresseeId));
+        followService.follow(requesterId, addresseeId);
         connection.setStatus(vn.edu.uit.socialjob.platform.common.enums.ConnectionStatus.PENDING);
         return connectionRepository.save(connection);
     }
 
+    public Connection acceptRequest(UUID connectionId) {
+        Connection connection = connectionRepository.findById(connectionId)
+                .orElseThrow(() -> new IllegalArgumentException("Connection request not found"));
+        if (connection.getStatus() != vn.edu.uit.socialjob.platform.common.enums.ConnectionStatus.PENDING) {
+            throw new IllegalStateException("Connection request is not pending");
+        }
+        connection.setStatus(vn.edu.uit.socialjob.platform.common.enums.ConnectionStatus.ACCEPTED);
+        followService.follow(connection.getAddressee().getId(), connection.getRequester().getId());
+        return connectionRepository.save(connection);
+    }
     public List<Connection> getAll() {
         return connectionRepository.findAll();
     }

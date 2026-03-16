@@ -48,4 +48,15 @@ public class ConnectionController {
         Connection newConnection = connectionService.sendRequest(requesterId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(newConnection);
     }
+    @PostMapping("/{connectionId}/accept")
+    public ResponseEntity<Connection> acceptRequest(
+            @PathVariable UUID connectionId, 
+            Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        Connection updatedConnection = connectionService.acceptRequest(connectionId);
+        return ResponseEntity.ok(updatedConnection);
+    }
 }
