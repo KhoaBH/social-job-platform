@@ -1,7 +1,6 @@
 package  vn.edu.uit.socialjob.platform.modules.user.entity;
 
 import jakarta.persistence.*;
-import java.util.UUID;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,11 +18,6 @@ import vn.edu.uit.socialjob.platform.common.entity.BaseEntity;
 )
 @EqualsAndHashCode(callSuper = false)
 public class User extends BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "uuid")
-    private UUID id;
-
     @Column(nullable = false)
     private String email;
 
