@@ -16,10 +16,11 @@ public class SkillCategoryService {
         return skillCategoryRepository.findAll();
     }
     public SkillCategory create(SkillCategoryRequest data) {
-        String slug = data.getName().toLowerCase().replaceAll("\\s+", "-");
+        String name = data.getName().trim();
+        String slug = name.toLowerCase().replaceAll("\\s+", "-");
         SkillCategory skillCategory = new SkillCategory();
-        skillCategory.setName(data.getName());
-        skillCategory.setDescription(data.getDescription());
+        skillCategory.setName(name);
+        skillCategory.setDescription(data.getDescription().trim());
         skillCategory.setSlug(slug);
 
         return skillCategoryRepository.save(skillCategory);
