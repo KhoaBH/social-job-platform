@@ -1,5 +1,6 @@
 package vn.edu.uit.socialjob.platform.modules.skill.service;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,5 +30,29 @@ public class SkillService {
         skill.setCategory(category);
 
         return skillRepository.save(skill);
+    }
+
+    public Skill getById(UUID id) {
+        return this.skillRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Skill not found"));
+    }
+
+    public Skill update(UUID id, SkillRequest data) {
+        Skill skill = this.getById(id);
+        String name = data.getName().trim();
+        String nameNormalizedString = name.toLowerCase().replaceAll("\\s+", "-");
+        SkillCategory category = skillCategoryRepository.findById(data.getCategoryId()).orElse(null);
+        
+        skill.setName(name);
+        skill.setNameNormalized(nameNormalizedString);
+        skill.setCategory(category);
+
+        return skillRepository.save(skill);
+    }
+
+    public void delete(UUID id) {
+        Skill skill = this.getById(id);
+        skill.setDeleted(true);
+        skillRepository.save(skill);
     }
 }
