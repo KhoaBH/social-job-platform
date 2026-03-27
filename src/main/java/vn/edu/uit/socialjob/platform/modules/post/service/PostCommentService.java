@@ -40,21 +40,27 @@ public class PostCommentService {
         return postCommentRepository.findRepliesByCommentId(parentCommentId);
     }
     
-    public PostComment create(UUID userId, PostCommentRequest data) {
+    public PostComment create(UUID userId, UUID postId, PostCommentRequest data) {
         PostComment comment = new PostComment();
-        Post post = postService.getById(data.getPostId());
+        Post post = postService.getById(postId);
         User user = userService.getById(userId);
-        if(data.getParentCommentId() != null) {
-            getById(data.getParentCommentId()); 
-            comment.setParentComment(getById(data.getParentCommentId()));
+
+        if (data.getPostId() != null && !data.getPostId().equals(postId)) {
+            throw new IllegalArgumentException("Post ID in body does not match URL");
         }
-        else {
-            comment.setParentComment(null);
+
+        PostComment parentComment = null;
+        if (data.getParentCommentId() != null) {
+            parentComment = getById(data.getParentCommentId());
+            if (!parentComment.getPost().getId().equals(postId)) {
+                throw new IllegalArgumentException("Parent comment does not belong to this post");
+            }
         }
+
         comment.setPost(post);
         comment.setUser(user);
         comment.setContent(data.getContent().trim());
-        
+        comment.setParentComment(parentComment);
         
         PostComment saved = postCommentRepository.save(comment);
         // postService.incrementCommentCount(postId);
@@ -62,17 +68,34 @@ public class PostCommentService {
         return saved;
     }
     
-    public PostComment update(UUID id, PostCommentRequest data) {
+    public PostComment update(UUID id, UUID userId, PostCommentRequest data) {
         PostComment comment = getById(id);
+        validateCommentOwner(comment, userId);
+
+        if (data.getPostId() != null && !data.getPostId().equals(comment.getPost().getId())) {
+            throw new IllegalArgumentException("Post ID cannot be changed");
+        }
+
+        UUID currentParentId = comment.getParentComment() != null ? comment.getParentComment().getId() : null;
+        if (data.getParentCommentId() != null && !data.getParentCommentId().equals(currentParentId)) {
+            throw new IllegalArgumentException("Parent comment cannot be changed");
+        }
+
         comment.setContent(data.getContent().trim());
         
         return postCommentRepository.save(comment);
     }
     
-    // public void delete(UUID id) {
-    //     PostComment comment = getById(id);
-    //     comment.setDeleted(true);
-    //     postCommentRepository.save(comment);
-    //     postService.decrementCommentCount(comment.getPostId());
-    // }
+    public void delete(UUID id, UUID userId) {
+        PostComment comment = getById(id);
+        validateCommentOwner(comment, userId);
+        comment.setDeleted(true);
+        postCommentRepository.save(comment);
+    }
+
+    private void validateCommentOwner(PostComment comment, UUID userId) {
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("You can only modify your own comments");
+        }
+    }
 }

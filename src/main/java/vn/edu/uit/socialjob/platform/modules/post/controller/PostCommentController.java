@@ -2,9 +2,11 @@ package vn.edu.uit.socialjob.platform.modules.post.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import vn.edu.uit.socialjob.platform.modules.post.dto.PostCommentRequest;
 import vn.edu.uit.socialjob.platform.modules.post.entity.PostComment;
@@ -41,30 +43,40 @@ public class PostCommentController {
     
     @PostMapping("/post/{postId}")
     public ResponseEntity<PostComment> create(
-            @Valid @RequestBody PostCommentRequest data, Authentication authentication
+            @PathVariable UUID postId,
+            @Valid @RequestBody PostCommentRequest data,
+            Authentication authentication
     ) {
-        if (authentication == null || authentication.getName() == null) {
-            return ResponseEntity.status(401).build();
-        }
-        try {
-            UUID userId = UUID.fromString(authentication.getName());
-            return ResponseEntity.ok(postCommentService.create(userId, data));
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(401).build();
-        }
+        UUID userId = extractUserId(authentication);
+        return ResponseEntity.ok(postCommentService.create(userId, postId, data));
     }
     
     @PutMapping("/{id}")
     public ResponseEntity<PostComment> update(
             @PathVariable UUID id,
-            @Valid @RequestBody PostCommentRequest data
+            @Valid @RequestBody PostCommentRequest data,
+            Authentication authentication
     ) {
-        return ResponseEntity.ok(postCommentService.update(id, data));
+        UUID userId = extractUserId(authentication);
+        return ResponseEntity.ok(postCommentService.update(id, userId, data));
     }
     
-    // @DeleteMapping("/{id}")
-    // public ResponseEntity<Void> delete(@PathVariable UUID id) {
-    //     postCommentService.delete(id);
-    //     return ResponseEntity.noContent().build();
-    // }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id, Authentication authentication) {
+        UUID userId = extractUserId(authentication);
+        postCommentService.delete(id, userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    private UUID extractUserId(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+
+        try {
+            return UUID.fromString(authentication.getName());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+    }
 }
