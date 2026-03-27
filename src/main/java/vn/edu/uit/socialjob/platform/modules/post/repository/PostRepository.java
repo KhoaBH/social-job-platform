@@ -16,6 +16,6 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     @Query("SELECT p FROM Post p WHERE p.id = :id AND p.isDeleted = false")
     Optional<Post> findById(@Param("id") UUID id);
     
-    @Query("SELECT p FROM Post p WHERE p.userId = :userId AND p.isDeleted = false")
-    List<Post> findByUserId(@Param("userId") UUID userId);
+    @Query("SELECT p FROM Post p WHERE p.author.id = :authorId AND p.isDeleted = false")
+    List<Post> findByAuthorId(@Param("authorId") UUID authorId);
 }

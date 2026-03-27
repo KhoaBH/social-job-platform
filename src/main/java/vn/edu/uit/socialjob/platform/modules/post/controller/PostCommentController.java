@@ -3,7 +3,9 @@ package vn.edu.uit.socialjob.platform.modules.post.controller;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
 import vn.edu.uit.socialjob.platform.modules.post.dto.PostCommentRequest;
 import vn.edu.uit.socialjob.platform.modules.post.entity.PostComment;
 import vn.edu.uit.socialjob.platform.modules.post.service.PostCommentService;
@@ -39,11 +41,17 @@ public class PostCommentController {
     
     @PostMapping("/post/{postId}")
     public ResponseEntity<PostComment> create(
-            @PathVariable UUID postId,
-            @RequestHeader("X-User-Id") UUID userId,
-            @Valid @RequestBody PostCommentRequest data
+            @Valid @RequestBody PostCommentRequest data, Authentication authentication
     ) {
-        return ResponseEntity.ok(postCommentService.create(postId, userId, data));
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(401).build();
+        }
+        try {
+            UUID userId = UUID.fromString(authentication.getName());
+            return ResponseEntity.ok(postCommentService.create(userId, data));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(401).build();
+        }
     }
     
     @PutMapping("/{id}")
@@ -54,9 +62,9 @@ public class PostCommentController {
         return ResponseEntity.ok(postCommentService.update(id, data));
     }
     
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        postCommentService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
+    // @DeleteMapping("/{id}")
+    // public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    //     postCommentService.delete(id);
+    //     return ResponseEntity.noContent().build();
+    // }
 }

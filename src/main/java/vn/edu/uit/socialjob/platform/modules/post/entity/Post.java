@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import vn.edu.uit.socialjob.platform.common.entity.BaseEntity;
+import vn.edu.uit.socialjob.platform.common.enums.VisibilityStatus;
+import vn.edu.uit.socialjob.platform.modules.user.entity.User;
 import java.util.UUID;
 
 @Getter
@@ -12,21 +14,16 @@ import java.util.UUID;
 @Table(name = "posts")
 public class Post extends BaseEntity {
     
-    @Column(nullable = false)
-    private UUID userId;
-    
-    @Column(nullable = false, columnDefinition = "text")
-    private String title;
-    
-    @Column(columnDefinition = "text")
-    private String description;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id", nullable = false)
+    private User author;
+
+    @Column(nullable = true)
+    private UUID companyId;
     
     @Column(columnDefinition = "text")
     private String content;
     
     @Column(name = "interaction_count")
-    private Integer interactionCount = 0;
-    
-    @Column(name = "comment_count")
-    private Integer commentCount = 0;
+    private VisibilityStatus visibility = VisibilityStatus.PUBLIC;
 }

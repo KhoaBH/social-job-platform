@@ -2,7 +2,9 @@ package vn.edu.uit.socialjob.platform.modules.post.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import vn.edu.uit.socialjob.platform.modules.post.dto.PostRequest;
 import vn.edu.uit.socialjob.platform.modules.post.entity.Post;
@@ -34,22 +36,31 @@ public class PostController {
     
     @PostMapping
     public ResponseEntity<Post> create(
-            @RequestHeader("X-User-Id") UUID userId,
-            @Valid @RequestBody PostRequest data
+           
+            @Valid @RequestBody PostRequest data,Authentication authentication
     ) {
-        return ResponseEntity.ok(postService.create(userId, data));
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(postService.create(UUID.fromString(authentication.getName()), data));
     }
     
     @PutMapping("/{id}")
     public ResponseEntity<Post> update(
             @PathVariable UUID id,
-            @Valid @RequestBody PostRequest data
+            @Valid @RequestBody PostRequest data,Authentication authentication
     ) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         return ResponseEntity.ok(postService.update(id, data));
     }
     
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id, Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         postService.delete(id);
         return ResponseEntity.noContent().build();
     }

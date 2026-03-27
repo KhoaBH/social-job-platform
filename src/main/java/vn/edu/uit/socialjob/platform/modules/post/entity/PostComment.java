@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import vn.edu.uit.socialjob.platform.common.entity.BaseEntity;
-import java.util.UUID;
+import vn.edu.uit.socialjob.platform.modules.user.entity.User;
 
 @Getter
 @Setter
@@ -12,15 +12,18 @@ import java.util.UUID;
 @Table(name = "post_comments")
 public class PostComment extends BaseEntity {
     
-    @Column(nullable = false)
-    private UUID postId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
     
-    @Column(nullable = false)
-    private UUID userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
     
     @Column(columnDefinition = "text", nullable = false)
     private String content;
     
-    @Column(name = "parent_comment_id")
-    private UUID parentCommentId; // for nested replies
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_comment_id")
+    private PostComment parentComment; // for nested replies
 }

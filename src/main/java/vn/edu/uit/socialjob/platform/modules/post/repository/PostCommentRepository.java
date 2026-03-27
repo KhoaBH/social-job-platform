@@ -16,9 +16,9 @@ public interface PostCommentRepository extends JpaRepository<PostComment, UUID> 
     @Query("SELECT pc FROM PostComment pc WHERE pc.id = :id AND pc.isDeleted = false")
     Optional<PostComment> findById(@Param("id") UUID id);
     
-    @Query("SELECT pc FROM PostComment pc WHERE pc.postId = :postId AND pc.isDeleted = false")
+    @Query("SELECT pc FROM PostComment pc WHERE pc.post.id = :postId AND pc.isDeleted = false")
     List<PostComment> findByPostId(@Param("postId") UUID postId);
     
-    @Query("SELECT pc FROM PostComment pc WHERE pc.parentCommentId = :parentCommentId AND pc.isDeleted = false")
+    @Query("SELECT pc FROM PostComment pc WHERE pc.parentComment.id = :parentCommentId AND pc.isDeleted = false")
     List<PostComment> findRepliesByCommentId(@Param("parentCommentId") UUID parentCommentId);
 }

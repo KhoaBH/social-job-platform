@@ -3,8 +3,12 @@ package vn.edu.uit.socialjob.platform.modules.post.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import vn.edu.uit.socialjob.platform.modules.post.dto.PostCommentRequest;
+import vn.edu.uit.socialjob.platform.modules.post.entity.Post;
 import vn.edu.uit.socialjob.platform.modules.post.entity.PostComment;
 import vn.edu.uit.socialjob.platform.modules.post.repository.PostCommentRepository;
+import vn.edu.uit.socialjob.platform.modules.user.entity.User;
+import vn.edu.uit.socialjob.platform.modules.user.service.UserService;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -17,6 +21,8 @@ public class PostCommentService {
     @Autowired
     private PostService postService;
     
+    @Autowired
+    private UserService userService;
     public List<PostComment> getAll() {
         return postCommentRepository.findAll();
     }
@@ -34,15 +40,24 @@ public class PostCommentService {
         return postCommentRepository.findRepliesByCommentId(parentCommentId);
     }
     
-    public PostComment create(UUID postId, UUID userId, PostCommentRequest data) {
+    public PostComment create(UUID userId, PostCommentRequest data) {
         PostComment comment = new PostComment();
-        comment.setPostId(postId);
-        comment.setUserId(userId);
+        Post post = postService.getById(data.getPostId());
+        User user = userService.getById(userId);
+        if(data.getParentCommentId() != null) {
+            getById(data.getParentCommentId()); 
+            comment.setParentComment(getById(data.getParentCommentId()));
+        }
+        else {
+            comment.setParentComment(null);
+        }
+        comment.setPost(post);
+        comment.setUser(user);
         comment.setContent(data.getContent().trim());
-        comment.setParentCommentId(data.getParentCommentId());
+        
         
         PostComment saved = postCommentRepository.save(comment);
-        postService.incrementCommentCount(postId);
+        // postService.incrementCommentCount(postId);
         
         return saved;
     }
@@ -54,10 +69,10 @@ public class PostCommentService {
         return postCommentRepository.save(comment);
     }
     
-    public void delete(UUID id) {
-        PostComment comment = getById(id);
-        comment.setDeleted(true);
-        postCommentRepository.save(comment);
-        postService.decrementCommentCount(comment.getPostId());
-    }
+    // public void delete(UUID id) {
+    //     PostComment comment = getById(id);
+    //     comment.setDeleted(true);
+    //     postCommentRepository.save(comment);
+    //     postService.decrementCommentCount(comment.getPostId());
+    // }
 }
