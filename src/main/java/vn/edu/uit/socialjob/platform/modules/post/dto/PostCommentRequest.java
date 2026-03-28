@@ -15,8 +15,7 @@ public class PostCommentRequest {
     @NotBlank(message = "Content is required")
     private String content;
 
-    // Optional in body: create uses postId from URL path.
-    private UUID postId;
+
     
     private UUID parentCommentId; // for nested replies
 

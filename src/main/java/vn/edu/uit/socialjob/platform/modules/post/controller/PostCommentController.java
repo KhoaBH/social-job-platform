@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import vn.edu.uit.socialjob.platform.modules.post.dto.PostCommentRequest;
+import vn.edu.uit.socialjob.platform.modules.post.dto.PostCommentResponse;
 import vn.edu.uit.socialjob.platform.modules.post.entity.PostComment;
 import vn.edu.uit.socialjob.platform.modules.post.service.PostCommentService;
 import java.util.List;
@@ -34,6 +35,16 @@ public class PostCommentController {
     @GetMapping("/post/{postId}")
     public ResponseEntity<List<PostComment>> getByPostId(@PathVariable UUID postId) {
         return ResponseEntity.ok(postCommentService.getByPostId(postId));
+    }
+
+    @GetMapping("/post/{postId}/roots")
+    public ResponseEntity<List<PostCommentResponse>> getRootByPostId(@PathVariable UUID postId) {
+        return ResponseEntity.ok(postCommentService.getRootCommentsByPostId(postId));
+    }
+
+    @GetMapping("/post/{postId}/tree")
+    public ResponseEntity<List<PostCommentResponse>> getCommentTreeByPostId(@PathVariable UUID postId) {
+        return ResponseEntity.ok(postCommentService.getCommentTreeByPostId(postId));
     }
     
     @GetMapping("/{id}/replies")
