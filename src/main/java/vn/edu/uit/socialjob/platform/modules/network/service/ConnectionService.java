@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import vn.edu.uit.socialjob.platform.modules.network.dto.FriendRequest;
 import vn.edu.uit.socialjob.platform.modules.network.entity.Connection;
 import vn.edu.uit.socialjob.platform.modules.network.repository.ConnectionRepository;
+import vn.edu.uit.socialjob.platform.modules.user.entity.User;
 import vn.edu.uit.socialjob.platform.modules.user.repository.UserRepository;
 
 
@@ -30,8 +31,13 @@ public class ConnectionService {
         if(alreadyExists) {
             throw new IllegalArgumentException("Friend request already sent");
         }
-        connection.setRequester(userRepository.getReferenceById(requesterId));
-        connection.setAddressee(userRepository.getReferenceById(addresseeId));
+        User requester = userRepository.findById(requesterId)
+            .orElseThrow(() -> new IllegalArgumentException("Requester not found"));
+        User addressee = userRepository.findById(addresseeId)
+            .orElseThrow(() -> new IllegalArgumentException("Addressee not found"));
+
+        connection.setRequester(requester);
+        connection.setAddressee(addressee);
         followService.follow(requesterId, addresseeId);
         connection.setStatus(vn.edu.uit.socialjob.platform.common.enums.ConnectionStatus.PENDING);
         return connectionRepository.save(connection);

@@ -20,11 +20,12 @@ public class SkillService {
     public List<Skill> getAll() {
         return this.skillRepository.findAll();
     }
+
     public Skill create(SkillRequest data) {
         String name = data.getName().trim();
         String nameNomorlizeString = name.toLowerCase().replaceAll("\\s+", "-");
         Skill skill = new Skill();
-        SkillCategory category = skillCategoryRepository.findById(data.getCategoryId()).orElse(null);
+        SkillCategory category = resolveCategory(data.getCategoryId());
         skill.setName(name);
         skill.setNameNormalized(nameNomorlizeString);
         skill.setCategory(category);
@@ -41,13 +42,22 @@ public class SkillService {
         Skill skill = this.getById(id);
         String name = data.getName().trim();
         String nameNormalizedString = name.toLowerCase().replaceAll("\\s+", "-");
-        SkillCategory category = skillCategoryRepository.findById(data.getCategoryId()).orElse(null);
+        SkillCategory category = resolveCategory(data.getCategoryId());
         
         skill.setName(name);
         skill.setNameNormalized(nameNormalizedString);
         skill.setCategory(category);
 
         return skillRepository.save(skill);
+    }
+
+    private SkillCategory resolveCategory(UUID categoryId) {
+        if (categoryId == null) {
+            return null;
+        }
+
+        return skillCategoryRepository.findById(categoryId)
+            .orElseThrow(() -> new IllegalArgumentException("Skill category not found"));
     }
 
     public void delete(UUID id) {
