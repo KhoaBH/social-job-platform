@@ -21,4 +21,7 @@ public interface PostInteractionRepository extends JpaRepository<PostInteraction
     
     @Query("SELECT pi FROM PostInteraction pi WHERE pi.postId = :postId AND pi.userId = :userId AND pi.isDeleted = false")
     Optional<PostInteraction> findByPostIdAndUserId(@Param("postId") UUID postId, @Param("userId") UUID userId);
+
+    @Query("SELECT pi FROM PostInteraction pi WHERE pi.postId = :postId AND pi.userId = :userId")
+    Optional<PostInteraction> findAnyByPostIdAndUserId(@Param("postId") UUID postId, @Param("userId") UUID userId);
 }

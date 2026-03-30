@@ -9,15 +9,17 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "post_interactions")
+@Table(
+    name = "post_interactions",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_post_interactions_post_user", columnNames = {"post_id", "user_id"})
+    }
+)
 public class PostInteraction extends BaseEntity {
     
-    @Column(nullable = false)
+    @Column(name = "post_id", nullable = false)
     private UUID postId;
     
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private UUID userId;
-    
-    @Column(nullable = false)
-    private String interactionType; // e.g., "like", "love", "haha", etc.
 }
