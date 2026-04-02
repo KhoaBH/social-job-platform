@@ -5,11 +5,16 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import vn.edu.uit.socialjob.platform.modules.skill.dto.CreateUserSkill;
 import vn.edu.uit.socialjob.platform.modules.skill.dto.SkillRequest;
 import vn.edu.uit.socialjob.platform.modules.skill.entity.Skill;
 import vn.edu.uit.socialjob.platform.modules.skill.entity.SkillCategory;
+import vn.edu.uit.socialjob.platform.modules.skill.entity.UserSkill;
 import vn.edu.uit.socialjob.platform.modules.skill.repository.SkillCategoryRepository;
 import vn.edu.uit.socialjob.platform.modules.skill.repository.SkillRepository;
+import vn.edu.uit.socialjob.platform.modules.skill.repository.UserSkillRepository;
+import vn.edu.uit.socialjob.platform.modules.user.entity.User;
+import vn.edu.uit.socialjob.platform.modules.user.service.UserService;
 
 @Service
 public class SkillService {
@@ -17,6 +22,10 @@ public class SkillService {
     private SkillRepository skillRepository;
     @Autowired
     private SkillCategoryRepository skillCategoryRepository;
+    @Autowired
+    private UserService userRepository;
+    @Autowired
+    private UserSkillRepository userSkillRepository;
     public List<Skill> getAll() {
         return this.skillRepository.findAll();
     }
@@ -33,9 +42,21 @@ public class SkillService {
         return skillRepository.save(skill);
     }
 
+    public List<UserSkill> getByUser(UUID id) {
+        return userSkillRepository.findByUserId(id);
+    }
     public Skill getById(UUID id) {
         return this.skillRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Skill not found"));
+    }
+    public UserSkill createUserSkill(UUID userId, CreateUserSkill data) {
+        UserSkill userSkill = new UserSkill();
+        User user = userRepository.getById(userId);
+        Skill skill = this.getById(data.getSkillId());
+        userSkill.setUser(user);
+        userSkill.setSkill(skill);
+        userSkill.setLevel(data.getLevel());
+        return userSkillRepository.save(userSkill);
     }
 
     public Skill update(UUID id, SkillRequest data) {
