@@ -33,6 +33,8 @@ public class CompanyService {
         return companyRepository.findByOwnerId(ownerId);
     }
 
+
+
     public Company create(UUID ownerId, CompanyRequest data) {
         User owner = userService.getById(ownerId);
 

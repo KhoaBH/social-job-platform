@@ -8,8 +8,11 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 import vn.edu.uit.socialjob.platform.modules.network.dto.FriendRequest;
+import vn.edu.uit.socialjob.platform.modules.network.dto.SuggestionDTO;
 import vn.edu.uit.socialjob.platform.modules.network.entity.Connection;
 import vn.edu.uit.socialjob.platform.modules.network.service.ConnectionService;
+import vn.edu.uit.socialjob.platform.modules.network.service.ConnectionSuggestionService;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -19,6 +22,8 @@ public class ConnectionController {
 
     @Autowired
     private ConnectionService connectionService;
+    @Autowired
+    private ConnectionSuggestionService suggestionService;
 
     @GetMapping
     public ResponseEntity<List<Connection>> listAll() {
@@ -58,5 +63,13 @@ public class ConnectionController {
         
         Connection updatedConnection = connectionService.acceptRequest(connectionId);
         return ResponseEntity.ok(updatedConnection);
+    }
+
+    @GetMapping("/suggestions")
+    public List<SuggestionDTO> getSuggestions(Authentication authentication) {
+
+        UUID userId = UUID.fromString(authentication.getName());
+
+        return suggestionService.suggest(userId);
     }
 }

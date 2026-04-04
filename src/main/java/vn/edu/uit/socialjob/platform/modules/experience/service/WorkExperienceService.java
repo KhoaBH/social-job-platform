@@ -11,7 +11,10 @@ import vn.edu.uit.socialjob.platform.modules.user.entity.User;
 import vn.edu.uit.socialjob.platform.modules.user.service.UserService;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class WorkExperienceService {
@@ -36,6 +39,24 @@ public class WorkExperienceService {
 
     public List<WorkExperience> getByUser(UUID userId) {
         return workExperienceRepository.findByUserId(userId);
+    }
+
+    public Set<UUID> getCompanyIdsByUser(UUID userId) {
+
+        return workExperienceRepository.findByUserId(userId)
+                .stream()
+                .map(WorkExperience::getCompany)
+                .filter(Objects::nonNull)
+                .map(Company::getId)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<UUID> getUsersByCompany(UUID companyId) {
+
+        return workExperienceRepository.findByCompany_Id(companyId)
+                .stream()
+                .map(w -> w.getUser().getId())
+                .collect(Collectors.toSet());
     }
 
     public WorkExperience create(UUID userId, WorkExperienceRequest data) {

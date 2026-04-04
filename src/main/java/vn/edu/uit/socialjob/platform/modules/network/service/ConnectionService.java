@@ -1,11 +1,15 @@
 package  vn.edu.uit.socialjob.platform.modules.network.service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import vn.edu.uit.socialjob.platform.common.enums.ConnectionStatus;
 import vn.edu.uit.socialjob.platform.modules.network.dto.FriendRequest;
 import vn.edu.uit.socialjob.platform.modules.network.entity.Connection;
 import vn.edu.uit.socialjob.platform.modules.network.repository.ConnectionRepository;
@@ -59,5 +63,24 @@ public class ConnectionService {
 
     public List<Connection> getConnectionsForUser(UUID userId) {
         return connectionRepository.findAllByUserId(userId);
+    }
+
+    public Set<UUID> getFriendIds(UUID userId) {
+
+        return connectionRepository.findAllByUserId(userId)
+                .stream()
+                .filter(c -> c.getStatus() == ConnectionStatus.ACCEPTED)
+                .map(c -> {
+                    if (c.getRequester().getId().equals(userId)) {
+                        return c.getAddressee().getId();
+                    } else {
+                        return c.getRequester().getId();
+                    }
+                })
+                .collect(Collectors.toSet());
+    }
+
+    public Set<UUID> getPopularUsers() {
+        return new HashSet<>(connectionRepository.findTop10PopularUsers());
     }
 }

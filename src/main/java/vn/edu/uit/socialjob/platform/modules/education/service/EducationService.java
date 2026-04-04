@@ -12,7 +12,10 @@ import vn.edu.uit.socialjob.platform.modules.user.entity.User;
 import vn.edu.uit.socialjob.platform.modules.user.service.UserService;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class EducationService {
@@ -40,6 +43,24 @@ public class EducationService {
 
     public List<Education> getByUser(UUID userId) {
         return educationRepository.findByUserId(userId);
+    }
+
+    public Set<UUID> getSchoolIdsByUser(UUID userId) {
+
+        return educationRepository.findByUserId(userId)
+                .stream()
+                .map(Education::getSchool)
+                .filter(Objects::nonNull)
+                .map(School::getId)
+                .collect(Collectors.toSet());
+    }
+
+    public Set<UUID> getUsersBySchool(UUID schoolId) {
+
+        return educationRepository.findBySchool_Id(schoolId)
+                .stream()
+                .map(e -> e.getUser().getId())
+                .collect(Collectors.toSet());
     }
 
     public Education create(UUID userId, EducationRequest data) {

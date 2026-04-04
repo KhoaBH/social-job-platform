@@ -24,6 +24,8 @@ public class SchoolService {
             .orElseThrow(() -> new IllegalArgumentException("School not found"));
     }
 
+
+
     public School create(SchoolRequest data) {
         School school = new School();
         school.setName(data.getName().trim());

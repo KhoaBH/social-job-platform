@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface EducationRepository extends JpaRepository<Education, UUID> {
     List<Education> findByUserId(UUID userId);
+    List<Education> findBySchool_Id(UUID schoolId);
 }
