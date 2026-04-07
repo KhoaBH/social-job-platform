@@ -23,7 +23,6 @@ import vn.edu.uit.socialjob.platform.modules.skill.dto.SkillRequest;
 import vn.edu.uit.socialjob.platform.modules.skill.entity.Skill;
 import vn.edu.uit.socialjob.platform.modules.skill.entity.UserSkill;
 import vn.edu.uit.socialjob.platform.modules.skill.service.SkillService;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 
@@ -43,9 +42,9 @@ public class SkillController {
         return ResponseEntity.ok(skillService.getById(id));
     }
 
-    @GetMapping("/user/{id}")
-    public ResponseEntity<List<UserSkill>> getByUser(@PathVariable UUID id) {
-        return ResponseEntity.ok(skillService.getByUser(id));
+    @GetMapping("/user")
+    public ResponseEntity<List<UserSkill>> getByUser(Authentication authentication) {
+        return ResponseEntity.ok(skillService.getByUser(extractUserId(authentication)));
     }
     
     @PostMapping
@@ -68,10 +67,22 @@ public class SkillController {
     ) {
         return ResponseEntity.ok(skillService.update(id, data));
     }
+    @PutMapping("/user/{id}")
+    public ResponseEntity<UserSkill> updateUserSkill(
+        @PathVariable UUID id,
+        @Valid @RequestBody CreateUserSkill data
+    ) {
+        return ResponseEntity.ok(skillService.updateUserSkill(id, data));
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         skillService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+    @DeleteMapping("/user/{id}")
+    public ResponseEntity<Void> deleteUserSkill(@PathVariable UUID id) {
+        skillService.deleteUserSkill(id);
         return ResponseEntity.noContent().build();
     }
     private UUID extractUserId(Authentication authentication) {

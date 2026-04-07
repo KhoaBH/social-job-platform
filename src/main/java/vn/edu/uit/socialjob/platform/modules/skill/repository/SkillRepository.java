@@ -18,4 +18,5 @@ public interface SkillRepository extends JpaRepository<Skill, UUID> {
 
     @Query("SELECT s FROM Skill s WHERE s.id = :id AND s.isDeleted = false")
     Optional<Skill> findById(@Param("id") UUID id);
+
 }

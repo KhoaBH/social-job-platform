@@ -42,6 +42,7 @@ public class SkillService {
         return skillRepository.save(skill);
     }
 
+    
     public List<UserSkill> getByUser(UUID id) {
         return userSkillRepository.findByUserId(id);
     }
@@ -50,12 +51,15 @@ public class SkillService {
             .orElseThrow(() -> new IllegalArgumentException("Skill not found"));
     }
     public UserSkill createUserSkill(UUID userId, CreateUserSkill data) {
-        UserSkill userSkill = new UserSkill();
         User user = userRepository.getById(userId);
         Skill skill = this.getById(data.getSkillId());
+        UserSkill userSkill = userSkillRepository.findByUserIdAndSkillId(userId, data.getSkillId())
+            .orElseGet(UserSkill::new);
+
         userSkill.setUser(user);
         userSkill.setSkill(skill);
         userSkill.setLevel(data.getLevel());
+        userSkill.setDeleted(false);
         return userSkillRepository.save(userSkill);
     }
 
@@ -71,6 +75,14 @@ public class SkillService {
 
         return skillRepository.save(skill);
     }
+    public UserSkill updateUserSkill(UUID id, CreateUserSkill data) {
+        UserSkill userSkill = userSkillRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("User skill not found"));
+        Skill skill = this.getById(data.getSkillId());
+        userSkill.setSkill(skill);
+        userSkill.setLevel(data.getLevel());
+        return userSkillRepository.save(userSkill);
+    }
 
     private SkillCategory resolveCategory(UUID categoryId) {
         if (categoryId == null) {
@@ -85,5 +97,11 @@ public class SkillService {
         Skill skill = this.getById(id);
         skill.setDeleted(true);
         skillRepository.save(skill);
+    }
+    public void deleteUserSkill(UUID id) {
+        UserSkill userSkill = userSkillRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("User skill not found"));
+        userSkill.setDeleted(true);
+        userSkillRepository.save(userSkill);
     }
 }
