@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 import vn.edu.uit.socialjob.platform.modules.network.dto.FriendRequest;
-import vn.edu.uit.socialjob.platform.modules.network.dto.SuggestionDTO;
+import vn.edu.uit.socialjob.platform.modules.network.dto.SuggestedUserDTO;
 import vn.edu.uit.socialjob.platform.modules.network.entity.Connection;
 import vn.edu.uit.socialjob.platform.modules.network.service.ConnectionService;
 import vn.edu.uit.socialjob.platform.modules.network.service.ConnectionSuggestionService;
@@ -66,10 +66,10 @@ public class ConnectionController {
     }
 
     @GetMapping("/suggestions")
-    public List<SuggestionDTO> getSuggestions(Authentication authentication) {
+    public List<SuggestedUserDTO> getSuggestions(Authentication authentication) {
 
         UUID userId = UUID.fromString(authentication.getName());
 
-        return suggestionService.suggest(userId);
+        return suggestionService.suggestUsers(userId);
     }
 }
