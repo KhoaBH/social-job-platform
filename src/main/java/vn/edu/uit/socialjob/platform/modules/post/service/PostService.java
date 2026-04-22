@@ -2,6 +2,9 @@ package vn.edu.uit.socialjob.platform.modules.post.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import vn.edu.uit.socialjob.platform.common.service.AzureBlobStorageService;
 import vn.edu.uit.socialjob.platform.common.enums.VisibilityStatus;
 import vn.edu.uit.socialjob.platform.modules.post.dto.PostRequest;
 import vn.edu.uit.socialjob.platform.modules.post.entity.Post;
@@ -13,12 +16,21 @@ import java.util.UUID;
 
 @Service
 public class PostService {
-    
-    @Autowired
-    private PostRepository postRepository;
-    
-     @Autowired
-    private  UserRepository userRepository;
+
+    private final PostRepository postRepository;
+    private final UserRepository userRepository;
+    private final AzureBlobStorageService azureBlobStorageService;
+
+    public PostService(
+        PostRepository postRepository,
+        UserRepository userRepository,
+        AzureBlobStorageService azureBlobStorageService
+    ) {
+        this.postRepository = postRepository;
+        this.userRepository = userRepository;
+        this.azureBlobStorageService = azureBlobStorageService;
+    }
+
     public List<Post> getAll() {
         return postRepository.findAll();
     }
@@ -31,14 +43,23 @@ public class PostService {
     public List<Post> getByUserId(UUID userId) {
         return postRepository.findByAuthorId(userId);
     }
-    
+
     public Post create(UUID userId, PostRequest data) {
+        return create(userId, data, null);
+    }
+
+    public Post create(UUID userId, PostRequest data, MultipartFile imageFile) {
         Post post = new Post();
         User author = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
         post.setAuthor(author);
         post.setCompanyId(data.getCompanyId());
         post.setContent(data.getContent());
-        post.setVisibility(VisibilityStatus.PUBLIC);
+        post.setVisibility(data.getVisibility() != null ? data.getVisibility() : VisibilityStatus.PUBLIC);
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String imageUrl = azureBlobStorageService.upload(imageFile, "posts");
+            post.setImageUrl(imageUrl);
+        }
 
         return postRepository.save(post);
     }

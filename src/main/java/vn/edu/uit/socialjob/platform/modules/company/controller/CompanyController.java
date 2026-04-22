@@ -1,6 +1,7 @@
 package vn.edu.uit.socialjob.platform.modules.company.controller;
 
 import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +16,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import vn.edu.uit.socialjob.platform.modules.company.dto.CompanyRequest;
+import vn.edu.uit.socialjob.platform.modules.company.dto.CompanyUserRequest;
 import vn.edu.uit.socialjob.platform.modules.company.entity.Company;
+import vn.edu.uit.socialjob.platform.modules.company.entity.CompanyUser;
 import vn.edu.uit.socialjob.platform.modules.company.service.CompanyService;
+import vn.edu.uit.socialjob.platform.modules.company.service.CompanyUserService;
+import vn.edu.uit.socialjob.platform.modules.user.entity.User;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,10 +33,18 @@ public class CompanyController {
     @Autowired
     private CompanyService companyService;
 
+    @Autowired
+    private CompanyUserService companyUserService;
     @GetMapping
     public ResponseEntity<List<Company>> listAll() {
         return ResponseEntity.ok(companyService.getAll());
     }
+
+    @GetMapping("/{companyId}/users")
+    public ResponseEntity<List<User>> getUsersByCompanyId(@PathVariable UUID companyId) {
+        return ResponseEntity.ok(companyUserService.getUsersByCompanyId(companyId));
+    }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Company> getById(@PathVariable UUID id) {
@@ -41,6 +54,14 @@ public class CompanyController {
     @GetMapping("/owner/{ownerId}")
     public ResponseEntity<List<Company>> getByOwner(@PathVariable UUID ownerId) {
         return ResponseEntity.ok(companyService.getByOwner(ownerId));
+    }
+
+    @PostMapping("/{companyId}/users")
+    public ResponseEntity<CompanyUser> createCompanyUser(
+        @PathVariable UUID companyId,
+        @Valid @RequestBody CompanyUserRequest companyUserRequest
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(companyUserService.create(companyUserRequest, companyId.toString()));
     }
 
     @PostMapping

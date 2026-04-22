@@ -23,6 +23,9 @@ public class Post extends BaseEntity {
     
     @Column(columnDefinition = "text")
     private String content;
+
+    @Column(name = "image_url", columnDefinition = "text")
+    private String imageUrl;
     
     @Column(name = "interaction_count")
     private VisibilityStatus visibility = VisibilityStatus.PUBLIC;
