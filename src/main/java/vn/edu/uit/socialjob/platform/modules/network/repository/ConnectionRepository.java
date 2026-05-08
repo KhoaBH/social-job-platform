@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import vn.edu.uit.socialjob.platform.common.enums.ConnectionStatus;
 import vn.edu.uit.socialjob.platform.modules.network.entity.Connection;
 import vn.edu.uit.socialjob.platform.modules.user.entity.User;
 
@@ -18,6 +19,7 @@ public interface ConnectionRepository extends JpaRepository<Connection, UUID> {
     
     List<Connection> findByRequesterIdOrAddresseeId(UUID requesterId, UUID addresseeId);
 
+    List<Connection> findAllByAddresseeIdAndStatus(UUID addresseeId, ConnectionStatus status);
     @Query(value = """
     SELECT user_id
     FROM (

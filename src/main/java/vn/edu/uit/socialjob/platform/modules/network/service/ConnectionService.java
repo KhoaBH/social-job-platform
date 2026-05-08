@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import vn.edu.uit.socialjob.platform.common.enums.ConnectionStatus;
 import vn.edu.uit.socialjob.platform.modules.network.dto.FriendRequest;
+import vn.edu.uit.socialjob.platform.modules.network.dto.FriendRequestResponse;
 import vn.edu.uit.socialjob.platform.modules.network.entity.Connection;
 import vn.edu.uit.socialjob.platform.modules.network.repository.ConnectionRepository;
 import vn.edu.uit.socialjob.platform.modules.user.entity.User;
@@ -65,8 +66,13 @@ public class ConnectionService {
         return connectionRepository.findAllByUserId(userId);
     }
 
+    public int mutualFriendsCount(UUID userId1, UUID userId2) {
+        Set<UUID> friendsOfUser1 = getFriendIds(userId1);
+        Set<UUID> friendsOfUser2 = getFriendIds(userId2);
+        friendsOfUser1.retainAll(friendsOfUser2);
+        return friendsOfUser1.size();
+    }
     public Set<UUID> getFriendIds(UUID userId) {
-
         return connectionRepository.findAllByUserId(userId)
                 .stream()
                 .filter(c -> c.getStatus() == ConnectionStatus.ACCEPTED)
@@ -80,6 +86,19 @@ public class ConnectionService {
                 .collect(Collectors.toSet());
     }
 
+    public List<FriendRequestResponse> getPendingRequestsForUser(UUID userId) {
+        List<Connection> request =  connectionRepository.findAllByAddresseeIdAndStatus(userId, ConnectionStatus.PENDING);
+        return request.stream().map(c -> {
+            FriendRequestResponse response = new FriendRequestResponse();
+            response.setConnectionId(c.getId());
+            response.setSenderId(c.getRequester().getId());
+            response.setSenderName(c.getRequester().getFullName());
+            response.setSenderAvatarUrl(c.getRequester().getAvatarUrl());
+            response.setStatus(c.getStatus().name());
+            response.setMutualFriendsCount(mutualFriendsCount(userId, c.getRequester().getId()));
+            return response;
+        }).toList();
+    }
     public Set<UUID> getPopularUsers() {
         return new HashSet<>(connectionRepository.findTop10PopularUsers());
     }

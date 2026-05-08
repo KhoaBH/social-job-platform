@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 import vn.edu.uit.socialjob.platform.modules.network.dto.FriendRequest;
+import vn.edu.uit.socialjob.platform.modules.network.dto.FriendRequestResponse;
 import vn.edu.uit.socialjob.platform.modules.network.dto.SuggestedUserDTO;
 import vn.edu.uit.socialjob.platform.modules.network.entity.Connection;
 import vn.edu.uit.socialjob.platform.modules.network.service.ConnectionService;
@@ -39,6 +40,16 @@ public class ConnectionController {
         UUID userId = UUID.fromString(authentication.getName());
         List<Connection> connections = connectionService.getConnectionsForUser(userId);
         return ResponseEntity.ok(connections);
+    }
+    @GetMapping("/requests")
+    public ResponseEntity<List<FriendRequestResponse>> getPendingRequests(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        UUID userId = UUID.fromString(authentication.getName());
+        List<FriendRequestResponse> pendingRequests = connectionService.getPendingRequestsForUser(userId);
+        return ResponseEntity.ok(pendingRequests);
     }
 
     @PostMapping("/request")
