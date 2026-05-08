@@ -58,6 +58,15 @@ public class ConnectionService {
         followService.follow(connection.getAddressee().getId(), connection.getRequester().getId());
         return connectionRepository.save(connection);
     }
+    public Connection rejectRequest(UUID connectionId) {
+        Connection connection = connectionRepository.findById(connectionId)
+                .orElseThrow(() -> new IllegalArgumentException("Connection request not found"));
+        if (connection.getStatus() != vn.edu.uit.socialjob.platform.common.enums.ConnectionStatus.PENDING) {
+            throw new IllegalStateException("Connection request is not pending");
+        }
+        connection.setStatus(vn.edu.uit.socialjob.platform.common.enums.ConnectionStatus.REJECTED);
+        return connectionRepository.save(connection);
+    }
     public List<Connection> getAll() {
         return connectionRepository.findAll();
     }
@@ -86,8 +95,8 @@ public class ConnectionService {
                 .collect(Collectors.toSet());
     }
 
-    public List<FriendRequestResponse> getPendingRequestsForUser(UUID userId) {
-        List<Connection> request =  connectionRepository.findAllByAddresseeIdAndStatus(userId, ConnectionStatus.PENDING);
+    public List<FriendRequestResponse> getRequestsForUser(UUID userId) {
+        List<Connection> request =  connectionRepository.findAllByUserId(userId);
         return request.stream().map(c -> {
             FriendRequestResponse response = new FriendRequestResponse();
             response.setConnectionId(c.getId());

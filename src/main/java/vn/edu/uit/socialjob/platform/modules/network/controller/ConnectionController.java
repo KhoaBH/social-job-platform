@@ -48,7 +48,7 @@ public class ConnectionController {
         }
 
         UUID userId = UUID.fromString(authentication.getName());
-        List<FriendRequestResponse> pendingRequests = connectionService.getPendingRequestsForUser(userId);
+        List<FriendRequestResponse> pendingRequests = connectionService.getRequestsForUser(userId);
         return ResponseEntity.ok(pendingRequests);
     }
 
@@ -73,6 +73,17 @@ public class ConnectionController {
         }
         
         Connection updatedConnection = connectionService.acceptRequest(connectionId);
+        return ResponseEntity.ok(updatedConnection);
+    }
+    @PostMapping("/{connectionId}/reject")
+    public ResponseEntity<Connection> rejectRequest(
+            @PathVariable UUID connectionId, 
+            Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Connection updatedConnection = connectionService.rejectRequest(connectionId);
         return ResponseEntity.ok(updatedConnection);
     }
 

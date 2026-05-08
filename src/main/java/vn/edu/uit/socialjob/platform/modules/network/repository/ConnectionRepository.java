@@ -14,7 +14,7 @@ import vn.edu.uit.socialjob.platform.modules.user.entity.User;
 public interface ConnectionRepository extends JpaRepository<Connection, UUID> {
     boolean existsByRequesterIdAndAddresseeId(UUID requesterId, UUID addresseeId);
     
-    @Query("SELECT c FROM Connection c WHERE c.requester.id = :userId OR c.addressee.id = :userId")
+    @Query("SELECT c FROM Connection c WHERE c.requester.id = :userId OR c.addressee.id = :userId ORDER BY c.status DESC")
     List<Connection> findAllByUserId(@Param("userId") UUID userId);
     
     List<Connection> findByRequesterIdOrAddresseeId(UUID requesterId, UUID addresseeId);
