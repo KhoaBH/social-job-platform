@@ -43,6 +43,7 @@ public class CompanyService {
         company.setName(data.getName().trim());
         company.setLogoUrl(data.getLogoUrl());
         company.setWebsite(data.getWebsite());
+        company.setDescription(data.getDescription());
         company.setVerified(Boolean.TRUE.equals(data.getVerified()));
 
         return companyRepository.save(company);
@@ -55,6 +56,7 @@ public class CompanyService {
         company.setName(data.getName().trim());
         company.setLogoUrl(data.getLogoUrl());
         company.setWebsite(data.getWebsite());
+        company.setDescription(data.getDescription());
         if (data.getVerified() != null) {
             company.setVerified(data.getVerified());
         }

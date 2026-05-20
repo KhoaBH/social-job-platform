@@ -12,7 +12,6 @@ import vn.edu.uit.socialjob.platform.modules.user.entity.User;
 
 @Component
 public class JwtProvider {
-    // Lưu ý: Key này phải dài ít nhất 32 ký tự. Trong thực tế nên để ở application.yml
     private final String SECRET_KEY = "Bdpldka0TPHYTRpaCNANqTZMd5mlYweYnWSnRuWPhB6";
     private final long JWT_EXPIRATION = 86400000L; 
     public String generateToken(User user) {
@@ -20,8 +19,8 @@ public class JwtProvider {
         Date expiryDate = new Date(now.getTime() + JWT_EXPIRATION);
 
         return Jwts.builder()
-                .setSubject(user.getId().toString()) // Lưu ID user vào Subject
-                .claim("email", user.getEmail())     // Thêm thông tin bổ sung (Payload)
+                .setSubject(user.getId().toString()) 
+                .claim("email", user.getEmail())     
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -37,7 +36,6 @@ public class JwtProvider {
             .getSubject();
     }
 
-    // Sau này ông sẽ cần hàm này để verify token khi User gọi API khác
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()

@@ -16,5 +16,7 @@ public class CompanyRequest {
 
     private String website;
 
+    private String description;
+
     private Boolean verified;
 }

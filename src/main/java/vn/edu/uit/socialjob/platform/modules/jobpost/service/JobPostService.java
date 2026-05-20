@@ -1,9 +1,12 @@
 package vn.edu.uit.socialjob.platform.modules.jobpost.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uit.socialjob.platform.modules.company.entity.Company;
 import vn.edu.uit.socialjob.platform.modules.company.repository.CompanyRepository;
 import vn.edu.uit.socialjob.platform.modules.jobpost.dto.JobPostRequest;
+import vn.edu.uit.socialjob.platform.modules.jobpost.dto.JobPostWithSkillsRequest;
+import vn.edu.uit.socialjob.platform.modules.jobpost.dto.JobSkillRequest;
 import vn.edu.uit.socialjob.platform.modules.jobpost.entity.JobPost;
 import vn.edu.uit.socialjob.platform.modules.jobpost.repository.JobPostRepository;
 import vn.edu.uit.socialjob.platform.modules.user.entity.User;
@@ -18,15 +21,18 @@ public class JobPostService {
     private final JobPostRepository jobPostRepository;
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
-
+    private final JobSkillService jobSkillService;
+    
     public JobPostService(
         JobPostRepository jobPostRepository,
         CompanyRepository companyRepository,
-        UserRepository userRepository
+        UserRepository userRepository,
+        JobSkillService jobSkillService
     ) {
         this.jobPostRepository = jobPostRepository;
         this.companyRepository = companyRepository;
         this.userRepository = userRepository;
+        this.jobSkillService = jobSkillService;
     }
 
     public List<JobPost> getAll() {
@@ -66,6 +72,21 @@ public class JobPostService {
         }
 
         return jobPostRepository.save(jobPost);
+    }
+
+    @Transactional
+    public JobPost createWithSkills(UUID actorId, JobPostWithSkillsRequest data) {
+        // Create job post first
+        JobPost jobPost = create(actorId, data);
+
+        // Attach skills if any
+        if (data.getSkills() != null && !data.getSkills().isEmpty()) {
+            for (JobSkillRequest skillReq : data.getSkills()) {
+                jobSkillService.create(jobPost.getId(), skillReq);
+            }
+        }
+
+        return jobPost;
     }
 
     public JobPost update(UUID id, JobPostRequest data) {

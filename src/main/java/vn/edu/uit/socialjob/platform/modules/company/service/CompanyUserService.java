@@ -44,4 +44,7 @@ public class CompanyUserService {
 
         return companyUserRepository.save(newCompanyUser);
     }
+    public List<CompanyUser> getCompanyByUserId(UUID userId) {
+        return companyUserRepository.findByUserId(userId);
+    }
 }

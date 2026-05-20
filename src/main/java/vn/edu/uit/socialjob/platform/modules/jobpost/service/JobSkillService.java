@@ -49,6 +49,14 @@ public class JobSkillService {
 
         return jobSkillRepository.save(jobSkill);
     }
+    public List<JobSkill> createMultiple(UUID jobPostId, List<JobSkillRequest> dataList) {
+        JobPost jobPost = jobPostRepository.findById(jobPostId)
+            .orElseThrow(() -> new IllegalArgumentException("Job post not found"));
+
+        return dataList.stream()
+            .map(data -> create(jobPostId, data))
+            .toList();
+    }
 
     public void delete(UUID id) {
         JobSkill jobSkill = jobSkillRepository.findById(id)

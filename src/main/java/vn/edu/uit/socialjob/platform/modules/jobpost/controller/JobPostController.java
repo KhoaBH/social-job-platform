@@ -1,6 +1,8 @@
 package vn.edu.uit.socialjob.platform.modules.jobpost.controller;
 
 import jakarta.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import vn.edu.uit.socialjob.platform.modules.jobpost.dto.JobPostRequest;
+import vn.edu.uit.socialjob.platform.modules.jobpost.dto.JobPostWithSkillsRequest;
 import vn.edu.uit.socialjob.platform.modules.jobpost.entity.JobPost;
 import vn.edu.uit.socialjob.platform.modules.jobpost.service.JobPostService;
 
@@ -25,6 +28,7 @@ import java.util.UUID;
 public class JobPostController {
 
     private final JobPostService jobPostService;
+    
 
     public JobPostController(JobPostService jobPostService) {
         this.jobPostService = jobPostService;
@@ -51,9 +55,9 @@ public class JobPostController {
     }
 
     @PostMapping
-    public ResponseEntity<JobPost> create(@Valid @RequestBody JobPostRequest data, Authentication authentication) {
+    public ResponseEntity<JobPost> create(@Valid @RequestBody JobPostWithSkillsRequest data, Authentication authentication) {
         UUID actorId = extractUserId(authentication);
-        return ResponseEntity.status(HttpStatus.CREATED).body(jobPostService.create(actorId, data));
+        return ResponseEntity.status(HttpStatus.CREATED).body(jobPostService.createWithSkills(actorId, data));
     }
 
     @PutMapping("/{id}")

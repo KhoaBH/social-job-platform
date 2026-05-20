@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import vn.edu.uit.socialjob.platform.common.enums.CompanyRole;
 import vn.edu.uit.socialjob.platform.modules.company.dto.CompanyRequest;
 import vn.edu.uit.socialjob.platform.modules.company.dto.CompanyUserRequest;
 import vn.edu.uit.socialjob.platform.modules.company.entity.Company;
@@ -45,7 +47,14 @@ public class CompanyController {
         return ResponseEntity.ok(companyUserService.getUsersByCompanyId(companyId));
     }
 
-
+    @GetMapping("/me")
+    public ResponseEntity<List<CompanyUser>> getCompanyUsersByUserId(Authentication authentication) {
+         UUID actorId = extractUserId(authentication);
+         if (!actorId.equals(actorId)) {
+             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Forbidden");
+         }
+        return ResponseEntity.ok(companyUserService.getCompanyByUserId(actorId));
+    }
     @GetMapping("/{id}")
     public ResponseEntity<Company> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(companyService.getById(id));
@@ -67,7 +76,9 @@ public class CompanyController {
     @PostMapping
     public ResponseEntity<Company> create(@Valid @RequestBody CompanyRequest data, Authentication authentication) {
         UUID ownerId = extractUserId(authentication);
-        return ResponseEntity.status(HttpStatus.CREATED).body(companyService.create(ownerId, data));
+        Company company = companyService.create(ownerId, data);
+        companyUserService.create(new CompanyUserRequest(ownerId, CompanyRole.OWNER), company.getId().toString());
+        return ResponseEntity.status(HttpStatus.CREATED).body(company);
     }
 
     @PutMapping("/{id}")
