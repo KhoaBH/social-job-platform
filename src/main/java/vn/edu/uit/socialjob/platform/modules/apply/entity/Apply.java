@@ -6,11 +6,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Column;
 import lombok.Getter;
 import lombok.Setter;
 import vn.edu.uit.socialjob.platform.common.entity.BaseEntity;
 import vn.edu.uit.socialjob.platform.modules.jobpost.entity.JobPost;
 import vn.edu.uit.socialjob.platform.modules.user.entity.User;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -31,6 +34,15 @@ public class Apply extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @jakarta.persistence.Column(name = "file_name", nullable = false)
+    @Column(name = "file_name", nullable = false)
     private String fileName;
+
+    @Column(name = "file_url")
+    private String fileUrl;
+
+    @Column(name = "score")
+    private Double score;
+
+    @Column(name = "score_updated_at")
+    private LocalDateTime scoreUpdatedAt;
 }

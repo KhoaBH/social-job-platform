@@ -12,6 +12,11 @@ import vn.edu.uit.socialjob.platform.modules.apply.entity.Apply;
 
 public interface ApplyRepository extends JpaRepository<Apply, UUID> {
 
+  interface JobPostApplyCountView {
+    UUID getJobPostId();
+    Long getTotal();
+  }
+
     @Query("""
         SELECT a
         FROM Apply a
@@ -36,4 +41,13 @@ public interface ApplyRepository extends JpaRepository<Apply, UUID> {
           AND a.isDeleted = false
     """)
     Optional<Apply> findActiveByJobPostIdAndUserId(@Param("jobPostId") UUID jobPostId, @Param("userId") UUID userId);
+
+    @Query("""
+        SELECT a.jobPost.id as jobPostId, COUNT(a) as total
+        FROM Apply a
+        WHERE a.jobPost.id IN :jobPostIds
+          AND a.isDeleted = false
+        GROUP BY a.jobPost.id
+    """)
+    List<JobPostApplyCountView> countActiveByJobPostIds(@Param("jobPostIds") List<UUID> jobPostIds);
 }

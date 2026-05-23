@@ -15,5 +15,7 @@ public class JobSkillRequest {
     @NotNull(message = "Skill is required")
     private UUID skillId;
 
+    private String skillName;
+
     private Boolean required;
 }

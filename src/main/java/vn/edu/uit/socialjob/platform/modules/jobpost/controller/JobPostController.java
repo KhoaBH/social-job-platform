@@ -19,6 +19,7 @@ import vn.edu.uit.socialjob.platform.modules.jobpost.dto.JobPostRequest;
 import vn.edu.uit.socialjob.platform.modules.jobpost.dto.JobPostWithSkillsRequest;
 import vn.edu.uit.socialjob.platform.modules.jobpost.entity.JobPost;
 import vn.edu.uit.socialjob.platform.modules.jobpost.service.JobPostService;
+import vn.edu.uit.socialjob.platform.modules.jobpost.service.JobRecommendationService;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,11 +28,13 @@ import java.util.UUID;
 @RequestMapping("/api/job-posts")
 public class JobPostController {
 
-    private final JobPostService jobPostService;
-    
 
-    public JobPostController(JobPostService jobPostService) {
+    private final JobPostService jobPostService;
+    private final JobRecommendationService jobRecommendationService;
+    
+    public JobPostController(JobPostService jobPostService, JobRecommendationService jobRecommendationService) {
         this.jobPostService = jobPostService;
+        this.jobRecommendationService = jobRecommendationService;
     }
 
     @GetMapping
@@ -52,6 +55,11 @@ public class JobPostController {
     @GetMapping("/posted-by/{postedById}")
     public ResponseEntity<List<JobPost>> getByPostedById(@PathVariable UUID postedById) {
         return ResponseEntity.ok(jobPostService.getByPostedById(postedById));
+    }
+    @GetMapping("/recommended")
+    public ResponseEntity<List<JobPost>> getRecommendedJobs(Authentication authentication) {
+        UUID userId = extractUserId(authentication);
+        return ResponseEntity.ok(jobRecommendationService.getRecommendedJobs(userId));
     }
 
     @PostMapping

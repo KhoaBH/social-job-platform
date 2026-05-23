@@ -7,7 +7,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
 import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 import vn.edu.uit.socialjob.platform.common.entity.BaseEntity;
@@ -52,4 +54,12 @@ public class JobPost extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private JobPostStatus status = JobPostStatus.DRAFT;
+
+    @Transient
+    @JsonProperty("apply_status")
+    private Boolean applyStatus = false;
+
+    @Transient
+    @JsonProperty("applications")
+    private Integer applications = 0;
 }

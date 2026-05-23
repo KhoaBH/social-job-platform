@@ -40,7 +40,11 @@ public class ApplyController {
         Authentication authentication
     ) {
         UUID userId = extractUserId(authentication);
-        return ResponseEntity.ok(applyService.getMyApply(userId, jobPostId));
+        try {
+            return ResponseEntity.ok(applyService.getMyApply(userId, jobPostId));
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
+        }
     }
 
     @GetMapping("/applies/me")
