@@ -80,8 +80,15 @@ public class JobPostService {
     public JobPost create(UUID actorId, JobPostRequest data) {
         JobPost jobPost = persistJobPost(actorId, data);
         jobEmbeddingClient.sendEmbeddingAfterCommit(jobPost.getId(), data);
-        // send posted_at metadata after commit (createdAt is set by auditing)
-        // Metadata updates disabled: not scheduling posted_at/apply_count payload
+        // send posted_at and apply_count metadata after commit
+        Map<String, Object> metadata = new java.util.LinkedHashMap<>();
+        if (jobPost.getCreatedAt() != null) {
+            metadata.put("date_create", jobPost.getCreatedAt().toString());
+        }
+        // initial apply count
+        int applyCount = applyRepository.findAllActiveByJobPostId(jobPost.getId()).size();
+        metadata.put("apply_count", applyCount);
+        jobEmbeddingClient.sendMetadataUpdateAfterCommit(jobPost.getId(), metadata);
         return jobPost;
     }
 
@@ -145,7 +152,13 @@ public class JobPostService {
 
         JobPost savedJobPost = jobPostRepository.save(jobPost);
         jobEmbeddingClient.sendEmbeddingAfterCommit(savedJobPost.getId(), data);
-        // Metadata updates disabled: not scheduling posted_at payload
+        Map<String, Object> metadata = new java.util.LinkedHashMap<>();
+        if (savedJobPost.getCreatedAt() != null) {
+            metadata.put("date_create", savedJobPost.getCreatedAt().toString());
+        }
+        int applyCount = applyRepository.findAllActiveByJobPostId(savedJobPost.getId()).size();
+        metadata.put("apply_count", applyCount);
+        jobEmbeddingClient.sendMetadataUpdateAfterCommit(savedJobPost.getId(), metadata);
         return savedJobPost;
     }
 

@@ -2,6 +2,7 @@ package vn.edu.uit.socialjob.platform.modules.apply.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -85,8 +86,15 @@ public class ApplyService {
             logger.error("Failed to score CV for apply id={}: {}", saved.getId(), ex.getMessage());
             // Don't throw exception - continue with apply even if scoring fails
         }
-        
-        // Metadata updates are temporarily disabled; skipping apply_count update
+        // Update apply_count metadata in embedding service
+        try {
+            int applyCount = applyRepository.findAllActiveByJobPostId(jobPostId).size();
+            Map<String, Object> metadata = new java.util.LinkedHashMap<>();
+            metadata.put("apply_count", applyCount);
+            jobEmbeddingClient.sendMetadataUpdateAfterCommit(jobPostId, metadata);
+        } catch (Exception ex) {
+            logger.warn("Failed to send metadata update for job {}: {}", jobPostId, ex.getMessage());
+        }
         return mapToResponse(saved);
     }
 

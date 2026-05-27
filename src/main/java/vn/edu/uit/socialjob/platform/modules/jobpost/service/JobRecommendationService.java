@@ -2,7 +2,6 @@ package vn.edu.uit.socialjob.platform.modules.jobpost.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.checkerframework.checker.units.qual.s;
 import org.springframework.stereotype.Service;
 import vn.edu.uit.socialjob.platform.modules.education.entity.Education;
 import vn.edu.uit.socialjob.platform.modules.education.repository.EducationRepository;
@@ -22,6 +21,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -54,17 +54,30 @@ public class JobRecommendationService {
         this.jobPostRepository = jobPostRepository;
         this.applyRepository = applyRepository;
         this.embeddingProperties = embeddingProperties;
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = HttpClient.newBuilder()
+            .connectTimeout(java.time.Duration.ofMillis(embeddingProperties.getTimeoutMillis()))
+            .version(HttpClient.Version.HTTP_1_1)
+            .build();
         this.objectMapper = new ObjectMapper();
     }
 
-    public List<JobPost> getRecommendedJobs(UUID userId) {
+    public List<JobPost> getRecommendedJobs(
+        UUID userId,
+        String text,
+        String location,
+        Integer minSalary,
+        Integer maxSalary,
+        String dateCreateGte,
+        Integer applyCountGte,
+        Integer topK
+    ) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Build CV text from user profile information
+        // Build query text from CV + optional FE text
         String cvText = buildCVText(userId);
-        System.out.println("[RECOMMENDATION] CV text for user " + userId + ":\n" + cvText);
+        String queryText = mergeQueryText(cvText, text);
+        System.out.println("[RECOMMENDATION] Query text for user " + userId + ":\n" + queryText);
 
         // Call bert_service /api/v1/recommend endpoint
         List<String> cvSkills = userSkillRepository.findByUserId(userId).stream()
@@ -72,7 +85,25 @@ public class JobRecommendationService {
             .filter(name -> name != null && !name.isBlank())
             .toList();
         System.out.println("[RECOMMENDATION] CV skills for user " + userId + ": " + cvSkills);
-        List<String> recommendedJobIds = callBertRecommendationApi(cvText, cvSkills);
+        Map<String, Object> filters = new LinkedHashMap<>();
+        if (location != null && !location.isBlank()) {
+            filters.put("location", location.trim());
+        }
+        if (minSalary != null) {
+            filters.put("min_salary_gte", minSalary);
+        }
+        if (maxSalary != null) {
+            filters.put("max_salary_lte", maxSalary);
+        }
+        if (dateCreateGte != null && !dateCreateGte.isBlank()) {
+            filters.put("date_create_gte", dateCreateGte.trim());
+        }
+        if (applyCountGte != null) {
+            filters.put("apply_count_gte", applyCountGte);
+        }
+
+        int resolvedTopK = topK == null || topK <= 0 ? 10 : topK;
+        List<String> recommendedJobIds = callBertRecommendationApi(cvText,text, cvSkills, filters, resolvedTopK);
         System.out.println("[RECOMMENDATION] Recommended job IDs: " + recommendedJobIds);
 
         java.util.Set<UUID> appliedJobIds = applyRepository.findAllActiveByUserId(userId).stream()
@@ -93,6 +124,19 @@ public class JobRecommendationService {
             })
             .filter(job -> job != null && !job.isDeleted())
             .toList();
+    }
+
+    private String mergeQueryText(String cvText, String textFromFe) {
+        String base = cvText == null ? "" : cvText.trim();
+        if (textFromFe == null || textFromFe.isBlank()) {
+            return base;
+        }
+
+        if (base.isBlank()) {
+            return textFromFe.trim();
+        }
+
+        return base + "\nSearch: " + textFromFe.trim();
     }
 
     private String buildCVText(UUID userId) {
@@ -169,18 +213,23 @@ public class JobRecommendationService {
     }
 
     @SuppressWarnings("unchecked")
-    private List<String> callBertRecommendationApi(String cvText, List<String> cvSkills) {
+    private List<String> callBertRecommendationApi(String cvText,String text, List<String> cvSkills, Map<String, Object> filters, int topK) {
         try {
             String url = embeddingProperties.getBaseUrl() + "/api/v1/recommend";
             Map<String, Object> payload = new java.util.LinkedHashMap<>();
             payload.put("text", cvText);
-            payload.put("top_k", 10);
+            payload.put("top_k", topK);
+            payload.put("keyword", text);
             if (cvSkills != null && !cvSkills.isEmpty()) {
                 payload.put("skill_ids", cvSkills);
+            }
+            if (filters != null && !filters.isEmpty()) {
+                payload.put("filters", filters);
             }
 
             String jsonPayload = objectMapper.writeValueAsString(payload);
             System.out.println("[RECOMMENDATION] Payload to bert_service: " + jsonPayload);
+            System.out.println("[RECOMMENDATION] POST URL: " + url);
 
             HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))

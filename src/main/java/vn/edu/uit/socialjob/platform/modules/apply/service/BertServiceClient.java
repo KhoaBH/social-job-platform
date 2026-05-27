@@ -24,6 +24,7 @@ public class BertServiceClient {
         this.properties = properties;
         this.httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofMillis(properties.getTimeoutMillis()))
+            .version(HttpClient.Version.HTTP_1_1)
             .build();
     }
 
@@ -44,15 +45,17 @@ public class BertServiceClient {
 
             String body = objectMapper.writeValueAsString(payload);
             
+            String url = properties.getBaseUrl() + properties.getScorePath();
+            System.out.println("[BERT SCORE CLIENT] POST " + url + " body=" + body);
             HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(properties.getBaseUrl() + properties.getScorePath()))
+                .uri(URI.create(url))
                 .timeout(Duration.ofMillis(properties.getTimeoutMillis()))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
 
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-            
+            System.out.println("[BERT SCORE CLIENT] response=" + response.statusCode() + " body=" + response.body());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new IllegalStateException("BERT service returned status " + response.statusCode() + ": " + response.body());
             }
@@ -73,8 +76,12 @@ public class BertServiceClient {
             return Double.parseDouble(scoreValue.toString());
 
         } catch (IllegalStateException ex) {
+            System.err.println("[BERT SCORE CLIENT] IllegalStateException: " + ex.getMessage());
+            ex.printStackTrace();
             throw ex;
         } catch (Exception ex) {
+            System.err.println("[BERT SCORE CLIENT] Exception while scoring CV: " + ex.getMessage());
+            ex.printStackTrace();
             throw new IllegalStateException("Failed to score CV with BERT service", ex);
         }
     }
