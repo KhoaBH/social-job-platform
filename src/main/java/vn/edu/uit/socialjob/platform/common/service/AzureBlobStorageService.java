@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,10 +21,10 @@ public class AzureBlobStorageService {
     private final AzureBlobStorageProperties properties;
 
     public AzureBlobStorageService(
-        BlobContainerClient blobContainerClient,
+        ObjectProvider<BlobContainerClient> blobContainerClientProvider,
         AzureBlobStorageProperties properties
     ) {
-        this.blobContainerClient = blobContainerClient;
+        this.blobContainerClient = blobContainerClientProvider.getIfAvailable();
         this.properties = properties;
     }
 
@@ -35,9 +36,10 @@ public class AzureBlobStorageService {
         // Step 2: Build a safe blob name so every upload has a unique path.
         String normalizedFolder = normalizeFolder(folder);
         String blobName = buildBlobName(normalizedFolder, file);
+        BlobContainerClient containerClient = requireBlobContainerClient();
 
         // Step 3: Resolve a blob client and stream the file directly to Azure.
-        BlobClient blobClient = blobContainerClient.getBlobClient(blobName);
+        BlobClient blobClient = containerClient.getBlobClient(blobName);
         try {
             blobClient.upload(file.getInputStream(), file.getSize(), true);
         } catch (IOException ex) {
@@ -66,9 +68,10 @@ public class AzureBlobStorageService {
         if (blobName.isBlank()) {
             return;
         }
+        BlobContainerClient containerClient = requireBlobContainerClient();
 
         // Step 2: Delete only when the blob actually exists.
-        BlobClient blobClient = blobContainerClient.getBlobClient(blobName);
+        BlobClient blobClient = containerClient.getBlobClient(blobName);
         if (blobClient.exists()) {
             blobClient.delete();
         }
@@ -83,7 +86,7 @@ public class AzureBlobStorageService {
             return trimTrailingSlash(properties.getPublicBaseUrl()) + "/" + blobName;
         }
 
-        return trimTrailingSlash(blobContainerClient.getBlobContainerUrl()) + "/" + blobName;
+        return trimTrailingSlash(requireBlobContainerClient().getBlobContainerUrl()) + "/" + blobName;
     }
 
     /**
@@ -137,7 +140,7 @@ public class AzureBlobStorageService {
      * Step 2: This is used for cleanup when replacing files.
      */
     private String extractBlobName(String blobUrl) {
-        String containerUrl = trimTrailingSlash(blobContainerClient.getBlobContainerUrl());
+        String containerUrl = trimTrailingSlash(requireBlobContainerClient().getBlobContainerUrl());
         String publicBaseUrl = properties.getPublicBaseUrl();
 
         if (publicBaseUrl != null && !publicBaseUrl.isBlank()) {
@@ -152,6 +155,14 @@ public class AzureBlobStorageService {
         }
 
         return "";
+    }
+
+    private BlobContainerClient requireBlobContainerClient() {
+        if (blobContainerClient == null) {
+            throw new IllegalStateException("Azure Blob Storage is disabled");
+        }
+
+        return blobContainerClient;
     }
 
     /**
