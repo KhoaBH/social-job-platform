@@ -30,6 +30,7 @@ public class JobEmbeddingClient {
         this.properties = properties;
         this.httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofMillis(properties.getTimeoutMillis()))
+            .version(HttpClient.Version.HTTP_1_1)
             .build();
     }
 
@@ -47,6 +48,12 @@ public class JobEmbeddingClient {
             if (request.getLocation() != null) {
                 metadata.put("location", request.getLocation());
             }
+            if (request.getSalaryMin() != null) {
+                metadata.put("min_salary", request.getSalaryMin());
+            }
+            if (request.getSalaryMax() != null) {
+                metadata.put("max_salary", request.getSalaryMax());
+            }
             // include skills snapshot if provided
             if (skills != null && !skills.isEmpty()) {
                 List<String> skillIds = skills.stream()
@@ -60,8 +67,10 @@ public class JobEmbeddingClient {
             }
 
             String body = objectMapper.writeValueAsString(payload);
+            String url = properties.getBaseUrl() + properties.getEmbedPath();
+            System.out.println("[EMBED CLIENT] POST " + url + " body=" + body);
             HttpRequest httpRequest = HttpRequest.newBuilder()
-                .uri(URI.create(properties.getBaseUrl() + properties.getEmbedPath()))
+                .uri(URI.create(url))
                 .timeout(Duration.ofMillis(properties.getTimeoutMillis()))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body))
@@ -69,21 +78,51 @@ public class JobEmbeddingClient {
 
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                System.err.println("[EMBED CLIENT] non-2xx response: " + response.statusCode() + " body=" + response.body());
                 throw new IllegalStateException("Embed service returned status " + response.statusCode() + ": " + response.body());
             }
         } catch (Exception ex) {
+            System.err.println("[EMBED CLIENT] Failed to send job embedding request: " + ex.getMessage());
+            ex.printStackTrace();
             throw new IllegalStateException("Failed to send job embedding request", ex);
         }
     }
 
     public void sendMetadataUpdate(UUID jobId, Map<String, Object> metadata) {
-        // Metadata update temporarily disabled (using original MMR only)
-        System.out.println("[JobEmbeddingClient] sendMetadataUpdate called but is currently disabled (no-op)");
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("id", jobId.toString());
+            payload.put("payload", metadata == null ? Map.of() : metadata);
+
+            String body = objectMapper.writeValueAsString(payload);
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                .uri(URI.create(properties.getBaseUrl() + properties.getMetadataPath()))
+                .timeout(Duration.ofMillis(properties.getTimeoutMillis()))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+            HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                throw new IllegalStateException("Metadata update returned status " + response.statusCode() + ": " + response.body());
+            }
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to send metadata update", ex);
+        }
     }
 
     public void sendMetadataUpdateAfterCommit(UUID jobId, Map<String, Object> metadata) {
-        // No-op while metadata updates are disabled
-        System.out.println("[JobEmbeddingClient] sendMetadataUpdateAfterCommit called but is currently disabled (no-op)");
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    sendMetadataUpdate(jobId, metadata);
+                }
+            });
+            return;
+        }
+
+        sendMetadataUpdate(jobId, metadata);
     }
 
     public void sendEmbeddingAfterCommit(UUID jobId, JobPostRequest request) {

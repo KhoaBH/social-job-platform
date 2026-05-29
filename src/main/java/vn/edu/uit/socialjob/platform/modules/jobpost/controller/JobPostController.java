@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import vn.edu.uit.socialjob.platform.modules.jobpost.dto.JobPostRequest;
@@ -57,9 +58,29 @@ public class JobPostController {
         return ResponseEntity.ok(jobPostService.getByPostedById(postedById));
     }
     @GetMapping("/recommended")
-    public ResponseEntity<List<JobPost>> getRecommendedJobs(Authentication authentication) {
+    public ResponseEntity<List<JobPost>> getRecommendedJobs(
+        Authentication authentication,
+        @RequestParam(required = false) String text,
+        @RequestParam(required = false) String location,
+        @RequestParam(required = false) Integer minSalary,
+        @RequestParam(required = false) Integer maxSalary,
+        @RequestParam(required = false) String dateCreateGte,
+        @RequestParam(required = false) Integer applyCountGte,
+        @RequestParam(required = false) Integer topK
+    ) {
         UUID userId = extractUserId(authentication);
-        return ResponseEntity.ok(jobRecommendationService.getRecommendedJobs(userId));
+        return ResponseEntity.ok(
+            jobRecommendationService.getRecommendedJobs(
+                userId,
+                text,
+                location,
+                minSalary,
+                maxSalary,
+                dateCreateGte,
+                applyCountGte,
+                topK
+            )
+        );
     }
 
     @PostMapping

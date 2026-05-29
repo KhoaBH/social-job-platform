@@ -8,6 +8,7 @@ public class JobEmbeddingProperties {
     private String baseUrl = "http://localhost:8000";
 
     private String embedPath = "/api/v1/jobs/embed";
+    private String metadataPath = "/api/v1/jobs/metadata";
 
     private long timeoutMillis = 10000;
 
@@ -25,6 +26,14 @@ public class JobEmbeddingProperties {
 
     public void setEmbedPath(String embedPath) {
         this.embedPath = embedPath;
+    }
+
+    public String getMetadataPath() {
+        return metadataPath;
+    }
+
+    public void setMetadataPath(String metadataPath) {
+        this.metadataPath = metadataPath;
     }
 
     public long getTimeoutMillis() {
