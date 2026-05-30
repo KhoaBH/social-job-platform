@@ -26,11 +26,13 @@ public interface ApplyRepository extends JpaRepository<Apply, UUID> {
     List<Apply> findAllActiveByJobPostId(@Param("jobPostId") UUID jobPostId);
 
     @Query("""
-        SELECT a
-        FROM Apply a
-        WHERE a.user.id = :userId
-          AND a.isDeleted = false
-    """)
+    SELECT a 
+    FROM Apply a 
+    JOIN FETCH a.jobPost jp 
+    JOIN FETCH jp.company 
+    WHERE a.user.id = :userId 
+      AND a.isDeleted = false
+""")
     List<Apply> findAllActiveByUserId(@Param("userId") UUID userId);
 
     @Query("""

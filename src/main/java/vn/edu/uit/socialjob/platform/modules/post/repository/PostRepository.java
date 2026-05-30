@@ -10,12 +10,12 @@ import java.util.UUID;
 
 public interface PostRepository extends JpaRepository<Post, UUID> {
     
-    @Query("SELECT p FROM Post p WHERE p.isDeleted = false")
+    @Query("SELECT p FROM Post p WHERE p.isDeleted = false ORDER BY p.createdAt DESC")
     List<Post> findAll();
     
     @Query("SELECT p FROM Post p WHERE p.id = :id AND p.isDeleted = false")
     Optional<Post> findById(@Param("id") UUID id);
     
-    @Query("SELECT p FROM Post p WHERE p.author.id = :authorId AND p.isDeleted = false")
+    @Query("SELECT p FROM Post p WHERE p.author.id = :authorId AND p.isDeleted = false ORDER BY p.createdAt DESC")
     List<Post> findByAuthorId(@Param("authorId") UUID authorId);
 }

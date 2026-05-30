@@ -170,6 +170,9 @@ public class ApplyService {
             .userEmail(apply.getUser().getEmail())
             .fileName(apply.getFileName())
             .fileUrl(apply.getFileUrl())
+            .companyName(apply.getJobPost() != null && apply.getJobPost().getCompany() != null
+                ? apply.getJobPost().getCompany().getName() : null)
+            .jobTitle(apply.getJobPost() != null ? apply.getJobPost().getTitle() : null)
             .score(apply.getScore())
             .scoreUpdatedAt(apply.getScoreUpdatedAt())
             .createdAt(apply.getCreatedAt())

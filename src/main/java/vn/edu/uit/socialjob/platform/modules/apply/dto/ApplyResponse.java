@@ -16,6 +16,8 @@ public class ApplyResponse {
     private String userEmail;
     private String fileName;
     private String fileUrl;
+    private String companyName;
+    private String jobTitle;
     private Double score;
     private LocalDateTime scoreUpdatedAt;
     private LocalDateTime createdAt;
