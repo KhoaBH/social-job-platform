@@ -43,16 +43,13 @@ public class CompanyController {
     }
 
     @GetMapping("/{companyId}/users")
-    public ResponseEntity<List<User>> getUsersByCompanyId(@PathVariable UUID companyId) {
-        return ResponseEntity.ok(companyUserService.getUsersByCompanyId(companyId));
+    public ResponseEntity<List<CompanyUser>> getUsersByCompanyId(@PathVariable UUID companyId) {
+        return ResponseEntity.ok(companyUserService.getCompanyUsersByCompanyId(companyId));
     }
 
     @GetMapping("/me")
     public ResponseEntity<List<CompanyUser>> getCompanyUsersByUserId(Authentication authentication) {
          UUID actorId = extractUserId(authentication);
-         if (!actorId.equals(actorId)) {
-             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Forbidden");
-         }
         return ResponseEntity.ok(companyUserService.getCompanyByUserId(actorId));
     }
     @GetMapping("/{id}")
@@ -68,16 +65,18 @@ public class CompanyController {
     @PostMapping("/{companyId}/users")
     public ResponseEntity<CompanyUser> createCompanyUser(
         @PathVariable UUID companyId,
-        @Valid @RequestBody CompanyUserRequest companyUserRequest
+        @Valid @RequestBody CompanyUserRequest companyUserRequest,
+        Authentication authentication
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(companyUserService.create(companyUserRequest, companyId.toString()));
+        UUID actorId = extractUserId(authentication);
+        return ResponseEntity.status(HttpStatus.CREATED).body(companyUserService.create(actorId, companyUserRequest, companyId.toString()));
     }
 
     @PostMapping
     public ResponseEntity<Company> create(@Valid @RequestBody CompanyRequest data, Authentication authentication) {
         UUID ownerId = extractUserId(authentication);
         Company company = companyService.create(ownerId, data);
-        companyUserService.create(new CompanyUserRequest(ownerId, CompanyRole.OWNER), company.getId().toString());
+        companyUserService.create(ownerId, new CompanyUserRequest(ownerId, CompanyRole.OWNER), company.getId().toString());
         return ResponseEntity.status(HttpStatus.CREATED).body(company);
     }
 

@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.edu.uit.socialjob.platform.modules.apply.repository.ApplyRepository;
 import vn.edu.uit.socialjob.platform.modules.company.entity.Company;
 import vn.edu.uit.socialjob.platform.modules.company.repository.CompanyRepository;
+import vn.edu.uit.socialjob.platform.modules.company.service.CompanyUserService;
 import vn.edu.uit.socialjob.platform.modules.jobpost.dto.JobPostRequest;
 import vn.edu.uit.socialjob.platform.modules.jobpost.dto.JobPostWithSkillsRequest;
 import vn.edu.uit.socialjob.platform.modules.jobpost.dto.JobSkillRequest;
@@ -32,13 +33,15 @@ public class JobPostService {
     private final JobSkillService jobSkillService;
     private final JobEmbeddingClient jobEmbeddingClient;
     private final ApplyRepository applyRepository;
+    private final CompanyUserService companyUserService;
     public JobPostService(
         JobPostRepository jobPostRepository,
         CompanyRepository companyRepository,
         UserRepository userRepository,
         JobSkillService jobSkillService,
         JobEmbeddingClient jobEmbeddingClient,
-        ApplyRepository applyRepository
+        ApplyRepository applyRepository,
+        CompanyUserService companyUserService
     ) {
         this.jobPostRepository = jobPostRepository;
         this.companyRepository = companyRepository;
@@ -46,6 +49,7 @@ public class JobPostService {
         this.jobSkillService = jobSkillService;
         this.jobEmbeddingClient = jobEmbeddingClient;
         this.applyRepository = applyRepository;
+        this.companyUserService = companyUserService;
     }
 
     public List<JobPost> getAll() {
@@ -95,6 +99,9 @@ public class JobPostService {
     private JobPost persistJobPost(UUID actorId, JobPostRequest data) {
         Company company = companyRepository.findById(data.getCompanyId())
             .orElseThrow(() -> new IllegalArgumentException("Company not found"));
+        if (!companyUserService.canManageRecruitment(company.getId(), actorId)) {
+            throw new IllegalArgumentException("Only company owner or manager can create job posts");
+        }
         User postedBy = userRepository.findById(actorId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -133,10 +140,13 @@ public class JobPostService {
         return jobPost;
     }
 
-    public JobPost update(UUID id, JobPostRequest data) {
+    public JobPost update(UUID id, UUID actorId, JobPostRequest data) {
         JobPost jobPost = getById(id);
         Company company = companyRepository.findById(data.getCompanyId())
             .orElseThrow(() -> new IllegalArgumentException("Company not found"));
+        if (!companyUserService.canManageRecruitment(company.getId(), actorId)) {
+            throw new IllegalArgumentException("Only company owner or manager can update job posts");
+        }
 
         jobPost.setCompany(company);
         jobPost.setTitle(data.getTitle().trim());
@@ -162,8 +172,11 @@ public class JobPostService {
         return savedJobPost;
     }
 
-    public void delete(UUID id) {
+    public void delete(UUID id, UUID actorId) {
         JobPost jobPost = getById(id);
+        if (!companyUserService.canManageRecruitment(jobPost.getCompany().getId(), actorId)) {
+            throw new IllegalArgumentException("Only company owner or manager can delete job posts");
+        }
         jobPost.setDeleted(true);
         jobPostRepository.save(jobPost);
     }

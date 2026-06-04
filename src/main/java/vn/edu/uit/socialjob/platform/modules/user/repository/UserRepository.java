@@ -17,6 +17,16 @@ public interface UserRepository extends JpaRepository<User, java.util.UUID> {
     @Query("SELECT u FROM User u WHERE u.isDeleted = false")
     List<User> findAll();
 
+    @Query("""
+        SELECT u FROM User u
+        WHERE u.isDeleted = false
+          AND (
+              LOWER(u.email) LIKE LOWER(CONCAT('%', :text, '%'))
+              OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :text, '%'))
+          )
+    """)
+    List<User> findAllByEmailOrFullNameContainingIgnoreCase(@Param("text") String text);
+
     @Query("SELECT u FROM User u WHERE u.id = :id AND u.isDeleted = false")
     java.util.Optional<User> findById(@Param("id") java.util.UUID id);
 }

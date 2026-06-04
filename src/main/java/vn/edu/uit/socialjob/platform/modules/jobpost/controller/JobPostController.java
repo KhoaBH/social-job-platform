@@ -92,14 +92,17 @@ public class JobPostController {
     @PutMapping("/{id}")
     public ResponseEntity<JobPost> update(
         @PathVariable UUID id,
-        @Valid @RequestBody JobPostRequest data
+        @Valid @RequestBody JobPostRequest data,
+        Authentication authentication
     ) {
-        return ResponseEntity.ok(jobPostService.update(id, data));
+        UUID actorId = extractUserId(authentication);
+        return ResponseEntity.ok(jobPostService.update(id, actorId, data));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        jobPostService.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable UUID id, Authentication authentication) {
+        UUID actorId = extractUserId(authentication);
+        jobPostService.delete(id, actorId);
         return ResponseEntity.noContent().build();
     }
 

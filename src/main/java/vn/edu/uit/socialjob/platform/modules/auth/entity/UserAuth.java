@@ -2,6 +2,9 @@ package vn.edu.uit.socialjob.platform.modules.auth.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+
+import org.hibernate.annotations.ColumnDefault;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -29,4 +32,8 @@ public class UserAuth extends BaseEntity {
 
     @Column(name = "linked_at")
     private LocalDateTime linkedAt;
+
+    @Column(name = "is_admin", nullable = false)
+    @ColumnDefault("false")
+    private Boolean isAdmin = false;
 }

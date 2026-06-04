@@ -19,15 +19,14 @@ public class UserController {
     private UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<User>> listAll() {
-        return ResponseEntity.ok(userService.getAll());
+    public ResponseEntity<List<User>> listAll(@RequestParam(required = false) String text) {
+        return ResponseEntity.ok(userService.getAll(text));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.getById(id));
     }
-
     @PostMapping("/register")
     public ResponseEntity<User> create(@RequestBody User user) {
         return ResponseEntity.status(HttpStatus.CREATED)

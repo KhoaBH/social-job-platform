@@ -7,8 +7,11 @@ import com.google.firebase.auth.FirebaseToken;
 import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Optional;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import vn.edu.uit.socialjob.platform.modules.auth.dto.AdminLoginResponse;
 import vn.edu.uit.socialjob.platform.modules.auth.dto.AuthResponse;
 import vn.edu.uit.socialjob.platform.modules.auth.entity.UserAuth;
 import vn.edu.uit.socialjob.platform.modules.auth.repository.UserAuthRepository;
@@ -23,17 +26,19 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final UserRepository userRepository;
     private final UserAuthRepository userAuthRepository;
-
+    private final PasswordEncoder passwordEncoder;
     public AuthService(
         FirebaseAuth firebaseAuth,
         JwtProvider jwtProvider,
         UserRepository userRepository,
-        UserAuthRepository userAuthRepository
+        UserAuthRepository userAuthRepository,
+        PasswordEncoder passwordEncoder
     ) {
         this.firebaseAuth = firebaseAuth;
         this.jwtProvider = jwtProvider;
         this.userRepository = userRepository;
         this.userAuthRepository = userAuthRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public AuthResponse authenticateWithFirebase(String idToken) throws FirebaseAuthException {
@@ -122,7 +127,41 @@ public class AuthService {
         auth.setLinkedAt(LocalDateTime.now());
         userAuthRepository.save(auth);
     }
+    public UserAuth createAdminAccount(String email, String fullName,String username, String password) {
+        User user = new User();
+        user.setEmail(email);
+        user.setFullName(fullName);
+        user.setUsername(username);
+        user = userRepository.save(user);
 
+        UserAuth auth = new UserAuth();
+        String HashedPassword = passwordEncoder.encode(password);
+        auth.setUser(user);
+        auth.setPasswordHash(HashedPassword);
+        auth.setIsAdmin(true);
+        auth.setLinkedAt(LocalDateTime.now());
+        return userAuthRepository.save(auth);
+    }
+    public AdminLoginResponse authenticateAdmin(String email, String password) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản admin với email này"));
+        UserAuth auth = userAuthRepository.findByUserAndIsAdmin(user, true)
+            .orElseThrow(() -> new RuntimeException("Tài khoản này không có quyền admin"));
+        if (!passwordEncoder.matches(password, auth.getPasswordHash())) {
+            throw new RuntimeException("Mật khẩu không chính xác");
+        }
+
+        String jwtToken = jwtProvider.generateToken(user);
+        return AdminLoginResponse.builder()
+            .token(jwtToken)
+            .user(AdminLoginResponse.UserDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .avatarUrl(user.getAvatarUrl())
+                .build())
+            .build();
+    }
     private String generateUsername(String email, String firebaseUid) {
         String base = (email != null && !email.isBlank())
             ? email.split("@", 2)[0]

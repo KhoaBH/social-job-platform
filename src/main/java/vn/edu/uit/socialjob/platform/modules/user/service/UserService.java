@@ -23,8 +23,12 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public List<User> getAll() {
-        return userRepository.findAll();
+    public List<User> getAll(String text) {
+        if (text != null && !text.trim().isEmpty()) {
+            return userRepository.findAllByEmailOrFullNameContainingIgnoreCase(text.trim());
+        }  else {
+            return userRepository.findAll();
+        }
     }
 
     public User getById(java.util.UUID id) {
