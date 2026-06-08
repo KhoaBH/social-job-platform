@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import vn.edu.uit.socialjob.platform.modules.skill.dto.SkillAliasResponse;
 import vn.edu.uit.socialjob.platform.modules.skill.entity.Skill;
 
 public interface SkillRepository extends JpaRepository<Skill, UUID> {
@@ -19,4 +20,8 @@ public interface SkillRepository extends JpaRepository<Skill, UUID> {
     @Query("SELECT s FROM Skill s WHERE s.id = :id AND s.isDeleted = false")
     Optional<Skill> findById(@Param("id") UUID id);
 
+@Query("SELECT new vn.edu.uit.socialjob.platform.modules.skill.dto.SkillAliasResponse(s.id, s.name, a.alias) " +
+       "FROM Skill s " +
+       "LEFT JOIN SkillAlias a ON s = a.skill ")    
+       List<SkillAliasResponse> findSkillsWithAliases();
 }

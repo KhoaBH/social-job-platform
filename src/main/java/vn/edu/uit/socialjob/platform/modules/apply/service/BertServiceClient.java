@@ -3,6 +3,8 @@ package vn.edu.uit.socialjob.platform.modules.apply.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import vn.edu.uit.socialjob.platform.config.BertServiceProperties;
+import vn.edu.uit.socialjob.platform.modules.jobpost.entity.JobPost;
+import vn.edu.uit.socialjob.platform.modules.jobpost.service.JobPostService;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -12,6 +14,7 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class BertServiceClient {
@@ -19,9 +22,11 @@ public class BertServiceClient {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final HttpClient httpClient;
     private final BertServiceProperties properties;
+    private final JobPostService jobService;
 
-    public BertServiceClient(BertServiceProperties properties) {
+    public BertServiceClient(BertServiceProperties properties, JobPostService jobService) {
         this.properties = properties;
+        this.jobService = jobService;
         this.httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofMillis(properties.getTimeoutMillis()))
             .version(HttpClient.Version.HTTP_1_1)
@@ -38,11 +43,15 @@ public class BertServiceClient {
     public Double scoreCv(String cvFileUrl,String jobId, List<String> userSkillIds, List<String> jobSkillIds) {
         try {
             Map<String, Object> payload = new LinkedHashMap<>();
+            JobPost job = new JobPost();
+            UUID jobUuid = UUID.fromString(jobId);
+            job = jobService.getById(jobUuid);
+            String jobDescription = job.getDescription();
             payload.put("cv_url", cvFileUrl);
             payload.put("job_id", jobId);
             payload.put("user_skills", userSkillIds != null ? userSkillIds : List.of());
             payload.put("job_skills", jobSkillIds != null ? jobSkillIds : List.of());
-
+            payload.put("text", jobDescription != null ? jobDescription : "");
             String body = objectMapper.writeValueAsString(payload);
             
             String url = properties.getBaseUrl() + properties.getScorePath();

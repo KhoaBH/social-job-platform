@@ -44,7 +44,7 @@ public class CompanyUserService {
             .orElseThrow(() -> new IllegalArgumentException("Only company owner can add members"));
 
         if (actorMembership.getRole() != CompanyRole.OWNER) {
-            throw new IllegalArgumentException("Only company owner can add members");
+            throw new IllegalArgumentException("You don't have permission to add members to this company");
         }
 
         if (companyUser.getRole() == CompanyRole.OWNER) {
@@ -59,6 +59,15 @@ public class CompanyUserService {
 
 
         return companyUserRepository.save(newCompanyUser);
+    }
+    public CompanyUser createOwner(UUID userId, UUID companyId) {
+        Company company = companyService.getById(companyId);
+        User user = userService.getById(userId);
+        CompanyUser companyUser = new CompanyUser();
+        companyUser.setCompany(company);
+        companyUser.setUser(user);
+        companyUser.setRole(CompanyRole.OWNER);
+        return companyUserRepository.save(companyUser);
     }
     public List<CompanyUser> getCompanyByUserId(UUID userId) {
         return companyUserRepository.findByUserId(userId);

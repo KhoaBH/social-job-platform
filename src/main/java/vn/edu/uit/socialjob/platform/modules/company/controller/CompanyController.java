@@ -76,7 +76,7 @@ public class CompanyController {
     public ResponseEntity<Company> create(@Valid @RequestBody CompanyRequest data, Authentication authentication) {
         UUID ownerId = extractUserId(authentication);
         Company company = companyService.create(ownerId, data);
-        companyUserService.create(ownerId, new CompanyUserRequest(ownerId, CompanyRole.OWNER), company.getId().toString());
+        companyUserService.createOwner(ownerId, company.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(company);
     }
 

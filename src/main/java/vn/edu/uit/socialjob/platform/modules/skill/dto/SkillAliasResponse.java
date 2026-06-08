@@ -2,15 +2,13 @@ package vn.edu.uit.socialjob.platform.modules.skill.dto;
 
 import java.util.UUID;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
-public class SkillAliasRequest {
+public class SkillAliasResponse {
+    private UUID id;
+    private String name;
     private String alias;
-    private UUID skillId;
 }

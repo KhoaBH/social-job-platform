@@ -7,6 +7,7 @@ import vn.edu.uit.socialjob.platform.modules.education.entity.Education;
 import vn.edu.uit.socialjob.platform.modules.education.repository.EducationRepository;
 import vn.edu.uit.socialjob.platform.modules.experience.entity.WorkExperience;
 import vn.edu.uit.socialjob.platform.modules.experience.repository.WorkExperienceRepository;
+import vn.edu.uit.socialjob.platform.modules.jobpost.dto.SearchJobRequest;
 import vn.edu.uit.socialjob.platform.modules.jobpost.entity.JobPost;
 import vn.edu.uit.socialjob.platform.modules.jobpost.repository.JobPostRepository;
 import vn.edu.uit.socialjob.platform.modules.apply.repository.ApplyRepository;
@@ -60,7 +61,9 @@ public class JobRecommendationService {
             .build();
         this.objectMapper = new ObjectMapper();
     }
+    // public List<JobPost> getRecommendedJobs(SearchJobRequest request) {
 
+    // }
     public List<JobPost> getRecommendedJobs(
         UUID userId,
         String text,

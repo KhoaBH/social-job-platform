@@ -19,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.validation.Valid;
 import vn.edu.uit.socialjob.platform.modules.skill.dto.CreateUserSkill;
+import vn.edu.uit.socialjob.platform.modules.skill.dto.SkillDictionary;
 import vn.edu.uit.socialjob.platform.modules.skill.dto.SkillRequest;
 import vn.edu.uit.socialjob.platform.modules.skill.entity.Skill;
 import vn.edu.uit.socialjob.platform.modules.skill.entity.UserSkill;
@@ -40,6 +41,10 @@ public class SkillController {
     @GetMapping("/{id}")
     public ResponseEntity<Skill> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(skillService.getById(id));
+    }
+    @GetMapping("/dictionary")
+    public ResponseEntity<List<SkillDictionary>> getDictionary() {
+        return ResponseEntity.ok(skillService.getDictionary());
     }
 
     @GetMapping("/user")

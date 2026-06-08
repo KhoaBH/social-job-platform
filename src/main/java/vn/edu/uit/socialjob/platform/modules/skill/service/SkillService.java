@@ -1,11 +1,16 @@
 package vn.edu.uit.socialjob.platform.modules.skill.service;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import vn.edu.uit.socialjob.platform.modules.skill.dto.CreateUserSkill;
+import vn.edu.uit.socialjob.platform.modules.skill.dto.SkillAliasResponse;
+import vn.edu.uit.socialjob.platform.modules.skill.dto.SkillDictionary;
 import vn.edu.uit.socialjob.platform.modules.skill.dto.SkillRequest;
 import vn.edu.uit.socialjob.platform.modules.skill.entity.Skill;
 import vn.edu.uit.socialjob.platform.modules.skill.entity.SkillCategory;
@@ -30,6 +35,7 @@ public class SkillService {
         return this.skillRepository.findAll();
     }
 
+
     public Skill create(SkillRequest data) {
         String name = data.getName().trim();
         String nameNomorlizeString = name.toLowerCase().replaceAll("\\s+", "-");
@@ -41,7 +47,23 @@ public class SkillService {
 
         return skillRepository.save(skill);
     }
-
+    public List<SkillDictionary> getDictionary() {
+            List<SkillAliasResponse> skillAliasResponses = skillRepository.findSkillsWithAliases();
+            Map<UUID, SkillDictionary> skillMap = new HashMap<>();
+    
+            for (SkillAliasResponse response : skillAliasResponses) {
+                UUID skillId = response.getId();
+                SkillDictionary skillDict = skillMap.get(skillId);
+                if (skillDict == null) {
+                    skillDict = new SkillDictionary(skillId, response.getName(), new ArrayList<>());
+                    skillMap.put(skillId, skillDict);
+                }
+                if (response.getAlias() != null) {
+                    skillDict.getAliases().add(response.getAlias());
+                }
+            }
+        return new ArrayList<>(skillMap.values());
+    }
     
     public List<UserSkill> getByUser(UUID id) {
         return userSkillRepository.findByUserId(id);

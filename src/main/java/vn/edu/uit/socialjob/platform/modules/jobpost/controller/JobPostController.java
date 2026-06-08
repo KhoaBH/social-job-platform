@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import vn.edu.uit.socialjob.platform.modules.jobpost.dto.JobPostRequest;
 import vn.edu.uit.socialjob.platform.modules.jobpost.dto.JobPostWithSkillsRequest;
+import vn.edu.uit.socialjob.platform.modules.jobpost.dto.SearchJobRequest;
 import vn.edu.uit.socialjob.platform.modules.jobpost.entity.JobPost;
 import vn.edu.uit.socialjob.platform.modules.jobpost.service.JobPostService;
 import vn.edu.uit.socialjob.platform.modules.jobpost.service.JobRecommendationService;
+import vn.edu.uit.socialjob.platform.modules.jobpost.service.JobSearchService;
 
 import java.util.List;
 import java.util.UUID;
@@ -32,10 +34,12 @@ public class JobPostController {
 
     private final JobPostService jobPostService;
     private final JobRecommendationService jobRecommendationService;
+    private final JobSearchService jobSearchService;
     
-    public JobPostController(JobPostService jobPostService, JobRecommendationService jobRecommendationService) {
+    public JobPostController(JobPostService jobPostService, JobRecommendationService jobRecommendationService, JobSearchService jobSearchService) {
         this.jobPostService = jobPostService;
         this.jobRecommendationService = jobRecommendationService;
+        this.jobSearchService = jobSearchService;
     }
 
     @GetMapping
@@ -56,6 +60,14 @@ public class JobPostController {
     @GetMapping("/posted-by/{postedById}")
     public ResponseEntity<List<JobPost>> getByPostedById(@PathVariable UUID postedById) {
         return ResponseEntity.ok(jobPostService.getByPostedById(postedById));
+    }
+    @GetMapping("/search")
+    public ResponseEntity<List<JobPost>> search(
+        SearchJobRequest request
+    ) {
+        return ResponseEntity.ok(
+            jobSearchService.searchJobs(request)
+        );
     }
     @GetMapping("/recommended")
     public ResponseEntity<List<JobPost>> getRecommendedJobs(
