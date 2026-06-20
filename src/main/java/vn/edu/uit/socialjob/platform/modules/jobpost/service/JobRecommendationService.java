@@ -72,7 +72,8 @@ public class JobRecommendationService {
         Integer maxSalary,
         String dateCreateGte,
         Integer applyCountGte,
-        Integer topK
+        Integer topK,
+        Double mmrLambda
     ) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -104,9 +105,11 @@ public class JobRecommendationService {
         if (applyCountGte != null) {
             filters.put("apply_count_gte", applyCountGte);
         }
-
+        if (mmrLambda != null) {
+            filters.put("mmr_lambda", mmrLambda);
+        }
         int resolvedTopK = topK == null || topK <= 0 ? 10 : topK;
-        List<String> recommendedJobIds = callBertRecommendationApi(cvText,text, cvSkills, filters, resolvedTopK);
+        List<String> recommendedJobIds = callBertRecommendationApi(cvText,text, cvSkills, filters, resolvedTopK, mmrLambda);
         System.out.println("[RECOMMENDATION] Recommended job IDs: " + recommendedJobIds);
 
         java.util.Set<UUID> appliedJobIds = applyRepository.findAllActiveByUserId(userId).stream()
@@ -216,7 +219,7 @@ public class JobRecommendationService {
     }
 
     @SuppressWarnings("unchecked")
-    private List<String> callBertRecommendationApi(String cvText,String text, List<String> cvSkills, Map<String, Object> filters, int topK) {
+    private List<String> callBertRecommendationApi(String cvText,String text, List<String> cvSkills, Map<String, Object> filters, int topK, Double lambda_val) {
         try {
             String url = embeddingProperties.getBaseUrl() + "/api/v1/recommend";
             Map<String, Object> payload = new java.util.LinkedHashMap<>();
@@ -229,7 +232,7 @@ public class JobRecommendationService {
             if (filters != null && !filters.isEmpty()) {
                 payload.put("filters", filters);
             }
-
+            payload.put("lambda_val", lambda_val != null ? lambda_val : 0.7);
             String jsonPayload = objectMapper.writeValueAsString(payload);
             System.out.println("[RECOMMENDATION] Payload to bert_service: " + jsonPayload);
             System.out.println("[RECOMMENDATION] POST URL: " + url);

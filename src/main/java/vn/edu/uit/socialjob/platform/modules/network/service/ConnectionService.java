@@ -1,7 +1,11 @@
 package  vn.edu.uit.socialjob.platform.modules.network.service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -10,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import vn.edu.uit.socialjob.platform.common.enums.ConnectionStatus;
+import vn.edu.uit.socialjob.platform.modules.network.dto.MyFriendDTO;
 import vn.edu.uit.socialjob.platform.modules.network.dto.FriendRequest;
 import vn.edu.uit.socialjob.platform.modules.network.dto.FriendRequestResponse;
 import vn.edu.uit.socialjob.platform.modules.network.entity.Connection;
@@ -46,6 +51,74 @@ public class ConnectionService {
         followService.follow(requesterId, addresseeId);
         connection.setStatus(vn.edu.uit.socialjob.platform.common.enums.ConnectionStatus.PENDING);
         return connectionRepository.save(connection);
+    }
+    public List<MyFriendDTO> getMyFriendsWithMutualCount(UUID myId) {
+        // Query 1: bạn bè của chính tôi
+        List<Connection> myConnections =
+            connectionRepository.findAllAcceptedConnectionsOf(myId, ConnectionStatus.ACCEPTED);
+
+        if (myConnections.isEmpty()) return List.of();
+
+        // friendId của từng connection (người không phải là tôi)
+        Map<UUID, Connection> friendIdToConnection = new LinkedHashMap<>();
+        for (Connection c : myConnections) {
+            UUID friendId = resolveFriendId(c, myId);
+            friendIdToConnection.put(friendId, c);
+        }
+        Set<UUID> myFriendIds = friendIdToConnection.keySet();
+
+        // Query 2: bạn bè CỦA TẤT CẢ bạn bè tôi, lấy 1 lần duy nhất
+        List<Connection> friendsOfFriendsConnections =
+            connectionRepository.findAllAcceptedConnectionsOfUsers(myFriendIds, ConnectionStatus.ACCEPTED);
+
+        // Gom thành map: friendId -> Set<id bạn của friend đó>
+        Map<UUID, Set<UUID>> friendOfFriendMap = new HashMap<>();
+        for (Connection c : friendsOfFriendsConnections) {
+            UUID a = c.getRequester().getId();
+            UUID b = c.getAddressee().getId();
+            // chỉ quan tâm cạnh có 1 đầu là bạn của tôi
+            if (myFriendIds.contains(a)) {
+                friendOfFriendMap.computeIfAbsent(a, k -> new HashSet<>()).add(b);
+            }
+            if (myFriendIds.contains(b)) {
+                friendOfFriendMap.computeIfAbsent(b, k -> new HashSet<>()).add(a);
+            }
+        }
+
+        // Build kết quả: với mỗi bạn của tôi, đếm giao giữa (bạn của họ) và (bạn của tôi)
+        List<MyFriendDTO> result = new ArrayList<>();
+        for (Map.Entry<UUID, Connection> entry : friendIdToConnection.entrySet()) {
+            UUID friendId = entry.getKey();
+            Connection c = entry.getValue();
+            User friend = resolveFriend(c, myId);
+
+            Set<UUID> theirFriends = friendOfFriendMap.getOrDefault(friendId, Set.of());
+            long mutualCount = theirFriends.stream()
+                .filter(id -> myFriendIds.contains(id) && !id.equals(myId))
+                .count();
+
+            result.add(new MyFriendDTO(
+                c.getId(),
+                friend.getId(),
+                friend.getFullName(),
+                friend.getHeadline(),
+                mutualCount
+            ));
+        }
+
+        return result;
+    }
+
+    private UUID resolveFriendId(Connection c, UUID myId) {
+        return c.getRequester().getId().equals(myId)
+            ? c.getAddressee().getId()
+            : c.getRequester().getId();
+    }
+
+    private User resolveFriend(Connection c, UUID myId) {
+        return c.getRequester().getId().equals(myId)
+            ? c.getAddressee()
+            : c.getRequester();
     }
 
     public Connection acceptRequest(UUID connectionId) {
@@ -94,6 +167,7 @@ public class ConnectionService {
                 })
                 .collect(Collectors.toSet());
     }
+
 
     public List<FriendRequestResponse> getRequestsForUser(UUID userId) {
         List<Connection> request =  connectionRepository.findAllByUserId(userId);

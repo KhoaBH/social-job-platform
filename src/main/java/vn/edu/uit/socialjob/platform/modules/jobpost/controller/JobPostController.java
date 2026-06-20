@@ -78,9 +78,11 @@ public class JobPostController {
         @RequestParam(required = false) Integer maxSalary,
         @RequestParam(required = false) String dateCreateGte,
         @RequestParam(required = false) Integer applyCountGte,
-        @RequestParam(required = false) Integer topK
+        @RequestParam(required = false) Integer topK,
+        @RequestParam(required = false) Double lambda_val
     ) {
         UUID userId = extractUserId(authentication);
+        System.out.println("lambda_val in controller: " + lambda_val);
         return ResponseEntity.ok(
             jobRecommendationService.getRecommendedJobs(
                 userId,
@@ -90,7 +92,8 @@ public class JobPostController {
                 maxSalary,
                 dateCreateGte,
                 applyCountGte,
-                topK
+                topK,
+                lambda_val
             )
         );
     }

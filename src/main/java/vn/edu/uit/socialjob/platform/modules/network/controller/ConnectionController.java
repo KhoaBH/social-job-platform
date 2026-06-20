@@ -91,7 +91,7 @@ public class ConnectionController {
     public List<SuggestedUserDTO> getSuggestions(Authentication authentication) {
 
         UUID userId = UUID.fromString(authentication.getName());
-
+        System.out.println("Getting suggestions for user: " + userId);
         return suggestionService.suggestUsers(userId);
     }
 }

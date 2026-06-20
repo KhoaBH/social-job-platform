@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import vn.edu.uit.socialjob.platform.modules.education.service.EducationService;
 import vn.edu.uit.socialjob.platform.modules.experience.service.WorkExperienceService;
 import vn.edu.uit.socialjob.platform.modules.network.dto.SuggestionDTO;
+import vn.edu.uit.socialjob.platform.modules.network.repository.ConnectionRepository;
 import vn.edu.uit.socialjob.platform.modules.network.dto.SuggestedUserDTO;
 import vn.edu.uit.socialjob.platform.modules.user.entity.User;
 import vn.edu.uit.socialjob.platform.modules.user.service.UserService;
@@ -20,7 +21,7 @@ public class ConnectionSuggestionService {
     private final WorkExperienceService workExperienceService;
     private final EducationService educationService;
     private final UserService userService;
-
+    private final ConnectionRepository connectionRepository;
     public List<SuggestionDTO> suggest(UUID userId) {
         // ======================
         // 1. PRELOAD DATA
@@ -48,16 +49,31 @@ public class ConnectionSuggestionService {
         // ======================
         // 4. SCORING WITH PARALLEL STREAM
         // ======================
-        return candidates.parallelStream()
-                .map(candidateId -> calculateScore(
-                        candidateId, myFriends, myCompanies, mySchools,
-                        friendMap, companiesMap, schoolsMap, friendDegrees
-                ))
-                .filter(dto -> dto.getScore() > 0)
-                .sorted((a, b) -> Double.compare(b.getScore(), a.getScore()))
-                .limit(10)
-                .toList();
+        List<SuggestionDTO> result = candidates.parallelStream()
+            .map(candidateId -> calculateScore(candidateId, myFriends, myCompanies, mySchools,
+                        friendMap, companiesMap, schoolsMap, friendDegrees))
+            .filter(dto -> dto.getScore() > 0)
+            .sorted((a, b) -> Double.compare(b.getScore(), a.getScore()))
+            .limit(10)
+            .collect(Collectors.toCollection(ArrayList::new)); // ← đổi toList() → ArrayList
+
+    // Fill nếu chưa đủ 10
+    int remaining = 10 - result.size();
+    if (remaining > 0) {
+        Set<UUID> alreadySuggested = result.stream()
+                .map(SuggestionDTO::getUserId)
+                .collect(Collectors.toSet());
+
+        getRandomUnconnectedUsers(userId, remaining + alreadySuggested.size())
+                .stream()
+                .filter(id -> !alreadySuggested.contains(id))
+                .limit(remaining)
+                .map(id -> new SuggestionDTO(id, 0.0, 0)) 
+                .forEach(result::add);
     }
+
+    return result;
+}
 
     /**
      * Trả về danh sách User đã được sắp xếp theo gợi ý (kèm score và mutual count)
@@ -151,7 +167,9 @@ public class ConnectionSuggestionService {
         }
         return degrees;
     }
-
+    public List<UUID> getRandomUnconnectedUsers(UUID userId, int limit) {
+        return connectionRepository.findRandomUnconnectedUsers(userId, limit);
+    }
     /**
      * Tính điểm gợi ý cho một candidate duy nhất
      */
